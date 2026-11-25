@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aura prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,600&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: tender, quiet, unhurried — a private notebook, not a feed
+   IDEA: a pocket journal with a soft light around it (the aura)
+   PICTURE: a breathing glow on Today; the working app itself everywhere else
+   COLOUR and TYPE: warm paper white, deep ink-teal, one coral accent; Literata titles, Mukta body (Latin + Devanagari)
+   LAYOUT: one phone-width column, top bar with Help, bottom tab bar */
+:root{color-scheme:light dark;
+--bg:light-dark(#f7f5f1,#10181d);--card:light-dark(#ffffff,#18232a);--ink:light-dark(#1d2f3a,#e7eef0);
+--soft:light-dark(#5d6f78,#9fb1b8);--line:light-dark(#e3ded5,#26343c);--teal:light-dark(#1f5f6b,#7cc4cc);
+--teal-bg:light-dark(#e3f0f0,#173238);--coral:light-dark(#d9654e,#f08a72);--coral-bg:light-dark(#fbe9e3,#3a2420);
+--glow1:light-dark(#f6c9b4,#5a3a33);--glow2:light-dark(#bfe1df,#1f4a4f)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+:root[data-pal=sunrise]{--bg:light-dark(#fff4ec,#1c1420);--card:light-dark(#ffffff,#271c2c);--ink:light-dark(#3b2240,#f5ebf1);--soft:light-dark(#7a5d74,#bba6b8);--line:light-dark(#f1ddd0,#3b2c40);--teal:light-dark(#6b4fc4,#b9a6ff);--teal-bg:light-dark(#ece6ff,#2f2648);--coral:light-dark(#e15b45,#ff8a73);--coral-bg:light-dark(#fde6de,#3d2320);--glow1:light-dark(#ffc2a3,#7a4034);--glow2:light-dark(#d9ccff,#433673)}
+:root[data-pal=teal]{--bg:light-dark(#f7f5f1,#10181d);--card:light-dark(#ffffff,#18232a);--ink:light-dark(#1d2f3a,#e7eef0);--soft:light-dark(#5d6f78,#9fb1b8);--line:light-dark(#e3ded5,#26343c);--teal:light-dark(#1f5f6b,#7cc4cc);--teal-bg:light-dark(#e3f0f0,#173238);--coral:light-dark(#d9654e,#f08a72);--coral-bg:light-dark(#fbe9e3,#3a2420);--glow1:light-dark(#f6c9b4,#5a3a33);--glow2:light-dark(#bfe1df,#1f4a4f)}
+:root[data-pal=lavender]{--bg:light-dark(#f4f1fc,#15132a);--card:light-dark(#ffffff,#1f1c38);--ink:light-dark(#2a2350,#ece9ff);--soft:light-dark(#625b85,#a9a3cf);--line:light-dark(#e2ddf3,#2f2b4d);--teal:light-dark(#5b4bc4,#a99cff);--teal-bg:light-dark(#e7e2fb,#2a2550);--coral:light-dark(#e0664f,#ff8f73);--coral-bg:light-dark(#fde7df,#3b2422);--glow1:light-dark(#d9d0ff,#3e3577);--glow2:light-dark(#ffd6c4,#5a3b36)}
+:root[data-pal=garden]{--bg:light-dark(#f1f6ec,#111a14);--card:light-dark(#ffffff,#19251d);--ink:light-dark(#1e3325,#e6f1e8);--soft:light-dark(#56705d,#9fb7a5);--line:light-dark(#dbe7d1,#26362b);--teal:light-dark(#2f7d52,#7fd0a0);--teal-bg:light-dark(#e1efd6,#1d3426);--coral:light-dark(#d9583f,#f08a72);--coral-bg:light-dark(#fbe6df,#3a2420);--glow1:light-dark(#c6e3ae,#2f5a3b);--glow2:light-dark(#ffe08f,#5b4a1f)}
+.calm{--bg:light-dark(#eef3f7,#0e1820);--ink:light-dark(#1f3346,#e3edf4);--soft:light-dark(#5a6f80,#9db3c4);--line:light-dark(#d6e1ea,#22323f);--card:light-dark(#ffffff,#16232d);
+ --teal:light-dark(#3d6c8c,#9cc7e0);--teal-bg:light-dark(#dde9f2,#1b3242);--glow1:light-dark(#9cc3dc,#2f5d7a);--glow2:light-dark(#c3b8ec,#4b4290);--glow3:light-dark(#a9dccd,#2d6457);color:var(--ink)}
+.calm .top{justify-content:space-between;align-items:center}
+.protobar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:6px 16px;font-size:13px;background:var(--teal-bg);color:var(--teal)}
+.protobar select,.scene select{font:500 14px Mukta,sans-serif;min-height:34px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:2px 8px}
+#wcv{width:100%;height:min(46vh,380px);display:block;border-radius:20px}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Mukta,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Literata,Mukta,serif;font-weight:600;line-height:1.15;margin:0 0 .4em;text-wrap:balance}
+h1{font-size:30px}h2{font-size:23px}h3{font-size:18px}
+p{margin:.3em 0 .8em}
+.app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+header{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+.brand{font-family:Literata,serif;font-size:22px;font-weight:600;display:flex;align-items:center;gap:8px}
+.dot{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,var(--coral),var(--glow1));box-shadow:0 0 12px var(--glow1)}
+.hbtns{display:flex;gap:8px}
+main{flex:1;padding:18px 16px 110px}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:5;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+nav div{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));width:100%;max-width:480px}
+nav button{background:none;border:0;color:var(--soft);font:500 12px Mukta,sans-serif;padding:12px 2px;line-height:1.2;min-height:56px;cursor:pointer}
+nav button[aria-current=true]{color:var(--teal);font-weight:700;box-shadow:inset 0 3px 0 var(--teal)}
+button,.btn{font:600 16px Mukta,sans-serif;border-radius:12px;min-height:44px;padding:8px 16px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.primary{background:var(--teal);border-color:var(--teal);color:light-dark(#fff,#0f1a1d)}
+.help{background:var(--coral);border-color:var(--coral);color:#fff;padding:6px 14px}
+.ghost{background:none}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--coral);outline-offset:2px}
+button:disabled{opacity:.5;cursor:default}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.muted{color:var(--soft);font-size:15px}
+.note{color:var(--soft);font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font:500 15px Mukta,sans-serif;border-radius:999px;padding:6px 14px;min-height:40px}
+.chip[aria-pressed=true]{background:var(--teal-bg);border-color:var(--teal);color:var(--teal)}
+textarea,input{width:100%;font:17px/1.5 Mukta,sans-serif;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+textarea{min-height:180px;resize:vertical}
+label{font-weight:600;display:block;margin:14px 0 6px}
+.glow{position:relative;height:190px;display:grid;place-items:center;margin:4px 0 14px}
+.glow::before,.glow::after{content:"";position:absolute;border-radius:50%;filter:blur(18px)}
+.glow::before{width:170px;height:170px;background:var(--glow1);animation:breathe 8s ease-in-out infinite}
+.glow::after{width:120px;height:120px;background:var(--glow2);left:calc(50% - 10px);top:40px;animation:breathe 8s ease-in-out -4s infinite}
+.glow span{position:relative;z-index:1;font-family:Literata,serif;font-size:19px;text-align:center;max-width:220px}
+@keyframes breathe{0%,100%{transform:scale(.85);opacity:.75}50%{transform:scale(1.08);opacity:1}}
+@media (prefers-reduced-motion:reduce){.glow::before,.glow::after{animation:none}}
+.entry{cursor:pointer;width:100%;text-align:left;display:block;font-weight:400}
+.entry small{color:var(--soft);display:block}
+.mood{display:inline-block;font-size:13px;border-radius:999px;padding:1px 10px;background:var(--teal-bg);color:var(--teal);margin-left:6px}
+.reflect{background:var(--teal-bg);border-color:transparent}
+.reflect h3{font-size:15px;font-family:Mukta,sans-serif;font-weight:700;margin:.8em 0 .2em;color:var(--teal)}
+.warn{background:var(--coral-bg);border-color:transparent}
+.sheet{position:fixed;inset:0;z-index:20;background:rgb(0 0 0/.45);display:none;align-items:flex-end;justify-content:center}
+.sheet.open{display:flex}
+.sheet>div{background:var(--bg);width:100%;max-width:480px;max-height:90dvh;overflow:auto;border-radius:22px 22px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom))}
+.big{font-size:26px;font-weight:700;color:var(--coral);font-family:Mukta,sans-serif}
+.lock{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.lock.open{display:flex}
+.lock input{max-width:200px;text-align:center;font-size:26px;letter-spacing:.4em}
+.post p{white-space:pre-wrap}
+.layer{white-space:pre-wrap}
+.composer{border:1px solid var(--line);border-radius:18px;background:var(--card);overflow:hidden}
+.composer:focus-within{border-color:var(--teal)}
+.composer textarea{border:0;border-radius:0;min-height:120px;background:transparent;outline:none}
+.composer textarea:focus-visible{outline:none}
+.cbar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid var(--line)}
+.cbar .grow{flex:1;font-size:13px;line-height:1.3;color:var(--soft)}
+.mic{width:44px;height:44px;padding:0;border-radius:50%;display:grid;place-items:center;flex:none}
+.mic svg{width:20px;height:20px}
+.mic[aria-pressed=true]{background:var(--coral);border-color:var(--coral);color:#fff;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px var(--coral-bg)}}
+@media (prefers-reduced-motion:reduce){.mic[aria-pressed=true]{animation:none}}
+.calm{position:fixed;inset:0;z-index:25;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:20px 20px calc(24px + env(safe-area-inset-bottom));text-align:center}
+.calm.open{display:flex}
+.calm .top{width:100%;display:flex;justify-content:flex-end}
+.calm .mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;width:100%;max-width:420px}
+.calm h2{font-size:28px}
+.bub{width:230px;height:230px;border-radius:50%;background:radial-gradient(circle at 40% 35%,var(--glow2),var(--glow1));box-shadow:0 0 60px var(--glow1);transform:scale(.55);transition:transform 4s ease-in-out}
+.stars{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.stars button{width:56px;height:56px;border-radius:50%;font-size:22px;padding:0}
+.stars button[aria-pressed=true]{background:var(--teal);border-color:var(--teal);color:#fff}
+.drift{width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,var(--glow1),transparent 70%);animation:drift 14s ease-in-out infinite alternate}
+@keyframes drift{0%{transform:translate(-50px,10px) scale(.9)}50%{transform:translate(40px,-20px) scale(1.05)}100%{transform:translate(-10px,25px) scale(.95)}}
+.line{font-family:Literata,Mukta,serif;font-size:22px;min-height:3em;transition:opacity 1.2s}
+.calmtools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.calmtools button{min-height:64px;line-height:1.2}
+@media (prefers-reduced-motion:reduce){.bub{transition:none}.drift{animation:none}}
+.eyes{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:15px;font-weight:500;cursor:pointer}
+.eyes input{width:22px;height:22px;flex:none}
+.calm .vnote{font-size:14px;color:var(--soft)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;z-index:40;display:none;max-width:90vw}
+</style>
+</head>
+<body>
+<div class="protobar" role="region" aria-label="Prototype controls"><strong>Test version</strong>
+  <label>Theme <select id="palSel"><option value="sunrise">Sunrise</option><option value="teal">Quiet teal</option><option value="lavender">Lavender dusk</option><option value="garden">Garden</option></select></label>
+  <label>Just watch <select id="visSel"><option value="aurora">Aurora</option><option value="tide">Slow tide</option><option value="rain">Rain on glass</option><option value="drift">Drifting lights</option></select></label></div>
+<div class="app">
+  <header>
+    <div class="brand"><span class="dot" aria-hidden="true"></span>Aura</div>
+    <div class="hbtns">
+      <button class="ghost" id="langBtn" aria-label="Language">हिं</button>
+      <button class="ghost" id="setBtn" data-t="settings">Settings</button>
+      <button class="help" id="helpBtn" data-t="help">Help now</button>
+    </div>
+  </header>
+  <main id="main"></main>
+</div>
+<nav><div id="tabs"></div></nav>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div id="sheetBody"></div></div>
+<div class="lock" id="lock">
+  <div class="dot" style="width:40px;height:40px;margin-bottom:16px"></div>
+  <h2 data-t="locked">Enter your PIN</h2>
+  <input id="pinIn" inputmode="numeric" maxlength="4" type="password" autocomplete="off" aria-label="PIN">
+  <p class="muted" id="pinMsg"></p>
+</div>
+<div class="calm" id="calm" role="dialog" aria-modal="true"><div class="top"><button class="ghost" data-act="calmDone" id="calmDoneBtn">Done</button></div><div class="mid" id="calmBody"></div></div>
+<div class="lock" id="welcome" style="overflow:auto;justify-content:flex-start;padding-top:48px">
+  <div style="max-width:420px;text-align:left">
+  <div class="dot" style="width:40px;height:40px;margin-bottom:16px"></div>
+  <h1>Welcome to Aura</h1>
+  <p>Aura is an early test version of an app for depression, loneliness and difficult relationships. Thank you for trying it.</p>
+  <ul style="padding-left:20px">
+   <li><strong>It's a prototype</strong>, not a replacement for a therapist, doctor or emergency help.</li>
+   <li><strong>For adults, 18 and over.</strong></li>
+   <li><strong>Your journal stays on this device.</strong> Nothing is collected or stored by us.</li>
+   <li><strong>One exception:</strong> when you tap "Reflect with Aura," that entry is sent to an AI service (Anthropic's Claude) to write the reflection. Aura doesn't save it, and Anthropic doesn't use it to train its models. Don't tap it if you'd rather keep an entry fully offline.</li>
+   <li>Aura's AI can be wrong. It never diagnoses or suggests medicine.</li>
+  </ul>
+  <p class="card warn" style="margin:14px 0">If you're in danger right now, call 112. To talk to a trained counsellor in India, free and any time: Tele-MANAS, 14416 or 1-800-891-4416.</p>
+  <button class="primary" id="welcomeOk" style="width:100%">I understand, let me in</button>
+  </div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+{
+/* ===== Set these two after deploying ===== */
+const REFLECT_URL="";   // your Cloudflare Worker URL, e.g. "https://aura-reflect.yourname.workers.dev"
+const FEEDBACK_URL="";  // your Google Form or Tally link
+/* ========================================== */
+const CARDS=[
+{id:"attach",topic:"attach",strong:true,match:/clingy|cling|pull away|push (them|people) away|abandon|left me|leave me|attach|छोड़ दे|छोड़ देगा|छोड़ देगी/i,
+ en:{t:"Why some of us hold on tight and some of us pull away",b:"Babies learn from their earliest caregivers whether closeness is safe. Researchers later found similar patterns in adult relationships: some people worry about being left, others get uncomfortable when things get too close. These are learned ways of staying safe, not fixed personality, and they can shift through safe relationships.",p:"When someone gets close, do you tend to hold on tighter or step back?"},
+ hi:{t:"क्यों कुछ लोग कसकर पकड़ते हैं और कुछ दूर हो जाते हैं",b:"बच्चे अपने शुरुआती देखभाल करने वालों से सीखते हैं कि नज़दीकी सुरक्षित है या नहीं। बाद में शोधकर्ताओं ने बड़ों के रिश्तों में भी ऐसे ही पैटर्न पाए: कुछ लोगों को छोड़ दिए जाने की चिंता रहती है, कुछ को ज़्यादा नज़दीकी असहज लगती है। ये सुरक्षित रहने के सीखे हुए तरीके हैं, स्थायी स्वभाव नहीं, और सुरक्षित रिश्तों से बदल सकते हैं।",p:"जब कोई करीब आता है, तो क्या आप और कसकर पकड़ते हैं या पीछे हट जाते हैं?"},
+ src:"Ainsworth et al. (1978), Patterns of Attachment · Hazan & Shaver (1987), Journal of Personality and Social Psychology"},
+{id:"ace",topic:"child",strong:true,match:/childhood|growing up|when i was (a kid|little|young)|बचपन|जब मैं छोटा|जब मैं छोटी/i,
+ en:{t:"Childhood experiences echo into adult health",b:"A large study of adults found that difficult childhood experiences, like abuse, neglect, or a parent struggling with addiction, were common and linked to more physical and mental health problems later. It describes risk across many people, not anyone's fate. Safe relationships and support later in life make a real difference.",p:"What did you need as a child that you didn't always get?"},
+ hi:{t:"बचपन के अनुभव बड़े होने पर भी असर डालते हैं",b:"बड़ों पर हुए एक बड़े अध्ययन में पाया गया कि बचपन के कठिन अनुभव — जैसे दुर्व्यवहार, उपेक्षा, या किसी माता-पिता की नशे की लत — आम थे और बाद में शारीरिक और मानसिक स्वास्थ्य की ज़्यादा समस्याओं से जुड़े थे। यह बहुत से लोगों में जोखिम बताता है, किसी की किस्मत नहीं। बाद के जीवन में सुरक्षित रिश्ते और सहारा सच में फ़र्क डालते हैं।",p:"बचपन में आपको किस चीज़ की ज़रूरत थी जो हमेशा नहीं मिली?"},
+ src:"Felitti et al. (1998), American Journal of Preventive Medicine"},
+{id:"rum",topic:"mood",strong:true,match:/keep thinking|overthink|can'?t stop thinking|again and again|over and over|why me|बार-बार|सोचता रहता|सोचती रहती/i,
+ en:{t:"Going over it again and again isn't the same as solving it",b:"Rumination means circling the same painful thoughts and asking \"why\" over and over. Research links it to low mood that lasts longer and runs deeper. It feels like problem-solving, but usually isn't. Noticing the loop is the first step out of it.",p:"Is there a thought you keep coming back to? What would it be like to set it down for ten minutes?"},
+ hi:{t:"बार-बार सोचना, हल ढूँढना नहीं है",b:"रूमिनेशन का मतलब है एक ही दुखद विचार के चारों ओर घूमते रहना और बार-बार \"क्यों\" पूछना। शोध इसे लंबे और गहरे उदासी के दौर से जोड़ता है। यह हल ढूँढने जैसा लगता है, पर अक्सर होता नहीं। इस चक्र को पहचानना बाहर निकलने का पहला कदम है।",p:"क्या कोई विचार है जिस पर आप बार-बार लौटते हैं? उसे दस मिनट के लिए रख देना कैसा लगेगा?"},
+ src:"Nolen-Hoeksema (2000), Journal of Abnormal Psychology"},
+{id:"lonely",topic:"lonely",strong:true,match:/lonely|alone|no one|nobody|अकेल|कोई नहीं/i,
+ en:{t:"Loneliness affects the body, not just the mood",b:"A review combining many studies found that weaker social connection is linked to a higher risk of dying earlier, on a scale comparable to well-known health risks. Loneliness works like hunger: a signal that we need connection. It isn't a personal failing.",p:"Who is one person you could send a small message to today?"},
+ hi:{t:"अकेलापन सिर्फ़ मन पर नहीं, शरीर पर भी असर डालता है",b:"कई अध्ययनों को मिलाकर की गई एक समीक्षा में पाया गया कि कमज़ोर सामाजिक जुड़ाव जल्दी मृत्यु के बढ़े हुए जोखिम से जुड़ा है, जो जाने-माने स्वास्थ्य जोखिमों जितना है। अकेलापन भूख की तरह एक संकेत है कि हमें जुड़ाव चाहिए। यह आपकी कमी नहीं है।",p:"आज आप किस एक इंसान को छोटा-सा मैसेज भेज सकते हैं?"},
+ src:"Holt-Lunstad, Smith & Layton (2010), PLoS Medicine"},
+{id:"label",topic:"mood",strong:false,match:/numb|don'?t know what i feel|can'?t explain|पता नहीं क्या महसूस/i,
+ en:{t:"Naming a feeling can soften it",b:"In brain-imaging studies, putting feelings into words was linked to lower activity in the amygdala, a part of the brain involved in threat responses. Saying \"I feel ashamed\" or \"I feel scared\" can take a little of the edge off. That's part of why journaling helps.",p:"Finish this with one exact word: right now I feel…"},
+ hi:{t:"भावना को नाम देने से वह हल्की हो सकती है",b:"दिमाग की इमेजिंग वाले अध्ययनों में, भावनाओं को शब्दों में कहने पर एमिग्डाला — खतरे पर प्रतिक्रिया देने वाला हिस्सा — कम सक्रिय दिखा। \"मुझे शर्म आ रही है\" या \"मुझे डर लग रहा है\" कहना थोड़ा सुकून दे सकता है। डायरी लिखने से मदद मिलने की यह एक वजह है।",p:"एक सटीक शब्द से पूरा कीजिए: अभी मैं महसूस कर रहा/रही हूँ…"},
+ src:"Lieberman et al. (2007), Psychological Science"},
+{id:"vent",topic:"anger",strong:true,match:/angry|anger|shout|yell|snapped|rage|furious|गुस्स|चिल्ला/i,
+ en:{t:"Letting anger out can keep it going",b:"The idea that you should \"let it all out\" by shouting or hitting a pillow is popular, but experiments found venting tended to keep anger alive rather than release it. Calming down, doing something else, or stepping away worked better. That's the idea behind your pause plan.",p:"What usually happens to your anger after you let it out?"},
+ hi:{t:"गुस्सा निकालने से वह बना रह सकता है",b:"यह मानना आम है कि चिल्लाकर या तकिया मारकर गुस्सा \"निकाल\" देना चाहिए, पर प्रयोगों में पाया गया कि ऐसा करने से गुस्सा कम होने के बजाय बना रहा। शांत होना, कुछ और करना, या वहाँ से हटना ज़्यादा काम आया। आपके पॉज़ प्लान के पीछे यही सोच है।",p:"गुस्सा निकालने के बाद आमतौर पर आपके गुस्से का क्या होता है?"},
+ src:"Bushman (2002), Personality and Social Psychology Bulletin"},
+{id:"selfcomp",topic:"self",strong:false,match:/hate myself|my fault|i'?m stupid|i'?m a failure|useless|खुद से नफ़रत|मेरी गलती|मैं बेकार/i,
+ en:{t:"Being kind to yourself isn't letting yourself off the hook",b:"Self-compassion means treating yourself the way you'd treat a friend who's struggling. Research links it to more resilience and, surprisingly, to more willingness to own mistakes, because admitting them hurts less.",p:"What would you say to a friend who did what you're blaming yourself for?"},
+ hi:{t:"खुद पर दया करना, ज़िम्मेदारी से बचना नहीं है",b:"सेल्फ़-कम्पैशन का मतलब है खुद के साथ वैसा बर्ताव करना जैसा आप मुश्किल में पड़े किसी दोस्त के साथ करते। शोध इसे ज़्यादा मज़बूती से जोड़ता है, और हैरानी की बात है कि गलतियाँ मानने की ज़्यादा तैयारी से भी, क्योंकि उन्हें मानना कम चुभता है।",p:"अगर किसी दोस्त ने वही किया होता जिसके लिए आप खुद को दोष दे रहे हैं, तो आप उससे क्या कहते?"},
+ src:"Neff (2003), Self and Identity"},
+{id:"breath",topic:"body",strong:false,match:/panic|can'?t breathe|heart racing|घबराहट|दिल तेज़/i,
+ en:{t:"Why slow breathing calms you down",b:"Breathing slowly, around six breaths a minute with long out-breaths, is linked to more activity in the calming branch of the nervous system and to lower anxiety. That's why Aura's Breathe exercise has a longer exhale.",p:"Where in your body do you notice stress first?"},
+ hi:{t:"धीमी साँस से शांति क्यों मिलती है",b:"धीरे साँस लेना — लगभग छह साँसें प्रति मिनट, लंबी साँस छोड़ते हुए — तंत्रिका तंत्र के शांत करने वाले हिस्से की ज़्यादा सक्रियता और कम चिंता से जुड़ा है। इसीलिए Aura की साँस वाली एक्सरसाइज़ में साँस छोड़ना लंबा है।",p:"तनाव सबसे पहले शरीर में कहाँ महसूस होता है?"},
+ src:"Zaccaro et al. (2018), Frontiers in Human Neuroscience"},
+{id:"conflict",topic:"rel",strong:true,match:/fight|argue|argument|quarrel|झगड़|बहस/i,
+ en:{t:"In arguments, how you fight matters more than whether you fight",b:"Watching couples argue in the lab, researcher John Gottman found four patterns that predicted trouble: criticism, contempt, defensiveness and stonewalling. Contempt, like mocking, eye-rolling or acting superior, was the strongest warning sign. Disagreeing itself wasn't the problem.",p:"In your last argument, which of these showed up, from either side?"},
+ hi:{t:"बहस में, बहस होना नहीं, उसका तरीका ज़्यादा मायने रखता है",b:"लैब में जोड़ों की बहस देखकर शोधकर्ता जॉन गॉटमैन ने चार पैटर्न पाए जो मुश्किल का संकेत थे: आलोचना, तिरस्कार, बचाव और चुप्पी साध लेना। तिरस्कार — जैसे मज़ाक उड़ाना, आँखें घुमाना या खुद को बड़ा दिखाना — सबसे बड़ा चेतावनी संकेत था। असहमति अपने आप में समस्या नहीं थी।",p:"आपकी पिछली बहस में, किसी भी तरफ़ से, इनमें से क्या दिखा?"},
+ src:"Gottman (1994), What Predicts Divorce?"}];
+const TOPICS={en:{attach:"Attachment",child:"Childhood",mood:"Mood and thoughts",lonely:"Loneliness",anger:"Anger",self:"Self-kindness",body:"Body and nervous system",rel:"Relationships"},
+hi:{attach:"लगाव",child:"बचपन",mood:"मन और विचार",lonely:"अकेलापन",anger:"गुस्सा",self:"खुद पर दया",body:"शरीर और तंत्रिका तंत्र",rel:"रिश्ते"}};
+const BOOKS=[
+{t:"Attachment in Adulthood",a:"Mario Mikulincer and Phillip R. Shaver",en:"The research behind adult attachment, written by two of the scientists who built the field. Dense, but the most thorough account there is.",hi:"बड़ों में लगाव पर शोध, इस क्षेत्र को बनाने वाले दो वैज्ञानिकों द्वारा। भारी है, पर सबसे पूरी जानकारी देती है।"},
+{t:"Self-Compassion",a:"Kristin Neff",en:"From the researcher who first measured self-compassion, with practical exercises alongside the science.",hi:"सेल्फ़-कम्पैशन को सबसे पहले मापने वाली शोधकर्ता की किताब, विज्ञान के साथ व्यावहारिक अभ्यास भी।"},
+{t:"Feeling Good",a:"David D. Burns",en:"A classic cognitive behavioural therapy (CBT) workbook. Studies of reading it found it helped many people with mild to moderate depression.",hi:"कॉग्निटिव बिहेवियरल थेरेपी (CBT) की एक क्लासिक किताब। अध्ययनों में इसे पढ़ने से हल्के से मध्यम अवसाद वाले कई लोगों को मदद मिली।"},
+{t:"Loneliness: Human Nature and the Need for Social Connection",a:"John T. Cacioppo and William Patrick",en:"A leading loneliness researcher explains what loneliness does to the mind and body, and why it's a signal rather than a flaw.",hi:"अकेलेपन के एक प्रमुख शोधकर्ता बताते हैं कि यह मन और शरीर पर क्या असर डालता है, और क्यों यह कमी नहीं, एक संकेत है।"},
+{t:"The Seven Principles for Making Marriage Work",a:"John M. Gottman and Nan Silver",en:"Decades of lab research on couples, turned into practical habits for any close relationship, not only marriage.",hi:"जोड़ों पर दशकों के शोध को व्यावहारिक आदतों में बदला गया है, जो सिर्फ़ शादी नहीं, किसी भी करीबी रिश्ते में काम आती हैं।"}];
+const ARTICLE={id:"writing",t:"Why writing about pain can help",time:"5 min",
+ body:[["p","Most of us were taught to keep painful things to ourselves. Research on writing suggests that putting them on paper, privately, can help. Not because writing fixes anything, but because of what it does to how we hold the experience."],
+ ["h","What the studies did"],
+ ["p","In the 1980s, psychologist James Pennebaker asked students to write for about 15 minutes a day, over a few days, about either a deeply upsetting experience or something neutral. The students who wrote about their deepest thoughts and feelings went on to visit the health centre less in the following months than those who wrote about neutral topics. Many studies since have tested versions of this, with mixed but often positive results."],
+ ["fig",""],
+ ["h","Why it might work"],
+ ["p","One idea is that turning a jumble of feelings into words forces us to give them a shape: a beginning, a middle, and some sense of meaning. Brain-imaging research on naming feelings points the same way. Putting a feeling into words was linked to lower activity in brain areas involved in threat."],
+ ["h","What to keep in mind"],
+ ["ul",["Writing about pain can feel worse for a short while before it feels better. That's common.","It works best when you write about feelings and meaning, not only what happened.","If writing makes you feel much worse, or brings up memories you can't handle alone, stop. That's a sign to talk to someone trained."]],
+ ["h","Try it in Aura"],
+ ["p","Write for 15 minutes about something that still weighs on you. Write about what happened, how it felt, and what it means to you now. You never have to share it."]],
+ src:["Pennebaker & Beall (1986), Journal of Abnormal Psychology","Lieberman et al. (2007), Psychological Science"]};
+const ARTICLE_FIG=`<svg viewBox="0 0 340 120" role="img" aria-label="Feelings become words, words become a story, the story gains meaning" style="width:100%;height:auto">
+<g font-family="Mukta,sans-serif" font-size="13" text-anchor="middle">
+<rect x="4" y="34" width="92" height="52" rx="12" fill="var(--teal-bg)"/><text x="50" y="58" fill="var(--teal)" font-weight="600">Jumbled</text><text x="50" y="74" fill="var(--teal)">feelings</text>
+<rect x="124" y="34" width="92" height="52" rx="12" fill="var(--teal-bg)"/><text x="170" y="58" fill="var(--teal)" font-weight="600">Words</text><text x="170" y="74" fill="var(--teal)">and a story</text>
+<rect x="244" y="34" width="92" height="52" rx="12" fill="var(--coral-bg)"/><text x="290" y="58" fill="var(--coral)" font-weight="600">Meaning</text><text x="290" y="74" fill="var(--coral)">and distance</text>
+<path d="M98 60h22M218 60h22" stroke="var(--soft)" stroke-width="2" fill="none"/><path d="M114 54l7 6-7 6M234 54l7 6-7 6" stroke="var(--soft)" stroke-width="2" fill="none"/>
+</g></svg>`;
+
+const EX_CATS={en:{breath:"Breathing",body:"Body and senses",image:"Imagery",mind:"Thinking"},hi:{breath:"साँस",body:"शरीर और इंद्रियाँ",image:"कल्पना",mind:"सोच"}};
+const EX={
+breathe:{cat:"breath",en:{n:"Long-exhale breath",d:"In for 4, out for 6. The longer out-breath helps the body settle."},hi:{n:"लंबी साँस छोड़ना",d:"4 तक साँस अंदर, 6 तक बाहर। लंबी साँस छोड़ने से शरीर शांत होता है।"}},
+box:{cat:"breath",en:{n:"Box breathing",d:"In, hold, out, hold — 4 counts each, like tracing a square."},hi:{n:"बॉक्स ब्रीदिंग",d:"अंदर, रोकें, बाहर, रोकें — हर एक 4 गिनती, जैसे एक चौकोर बनाना।"}},
+sigh:{cat:"breath",en:{n:"The double sigh",d:"Two short breaths in through the nose, one long slow breath out."},hi:{n:"डबल आह",d:"नाक से दो छोटी साँसें अंदर, फिर एक लंबी धीमी साँस बाहर।"}},
+ground:{cat:"body",en:{n:"5-4-3-2-1",d:"Notice things you can see, touch, hear, smell and taste."},hi:{n:"5-4-3-2-1",d:"जो देख, छू, सुन, सूँघ और चख सकते हैं, उन पर ध्यान दें।"}},
+pmr:{cat:"body",en:{n:"Tense and release",d:"Squeeze one part of your body, then let it go. No imagination needed.",
+  steps:[["Make tight fists with both hands. Hold…",7],["Now let go. Notice how your hands feel different.",9],["Lift your shoulders up to your ears. Hold…",7],["Drop them. Let them stay heavy.",9],["Scrunch up your face, eyes and jaw. Hold…",7],["Let it all soften.",9],["Tighten your stomach. Hold…",7],["Release, and breathe out slowly.",9],["Press your feet into the floor and tighten your legs. Hold…",7],["Let go. Notice your whole body a little heavier, a little looser.",10]]},
+ hi:{n:"कसें और ढीला छोड़ें",d:"शरीर के एक हिस्से को कसें, फिर ढीला छोड़ दें। कल्पना की ज़रूरत नहीं।",
+  steps:[["दोनों हाथों की कसकर मुट्ठी बनाइए। रोकिए…",7],["अब छोड़ दीजिए। महसूस कीजिए कि हाथ कितने अलग लग रहे हैं।",9],["कंधों को कानों तक उठाइए। रोकिए…",7],["नीचे गिरा दीजिए। उन्हें भारी रहने दीजिए।",9],["चेहरा, आँखें और जबड़ा सिकोड़िए। रोकिए…",7],["सब कुछ ढीला छोड़ दीजिए।",9],["पेट को कसिए। रोकिए…",7],["छोड़िए, और धीरे से साँस बाहर निकालिए।",9],["पैरों को ज़मीन पर दबाइए और टाँगें कसिए। रोकिए…",7],["छोड़ दीजिए। पूरा शरीर थोड़ा भारी, थोड़ा ढीला महसूस कीजिए।",10]]}},
+butterfly:{cat:"body",en:{n:"Butterfly hug",d:"Cross your arms and tap slowly, left and right. Steady and soothing."},hi:{n:"बटरफ़्लाई हग",d:"हाथों को क्रॉस करके धीरे-धीरे बाएँ और दाएँ थपथपाइए। स्थिर और सुकून देने वाला।"}},
+heart:{cat:"body",en:{n:"Hand on heart",d:"Gentle touch and a few kind words to yourself.",
+  steps:[["Place one hand on your chest, over your heart.",8],["Feel the warmth of your hand. Notice your chest rise and fall.",10],["Breathe in slowly… and out slowly.",10],["Say quietly, in your head: this is hard right now.",8],["And: I'm here with myself.",8],["Stay here for a few more breaths.",12]]},
+ hi:{n:"दिल पर हाथ",d:"हल्का स्पर्श और खुद से कुछ प्यार भरे शब्द।",
+  steps:[["एक हाथ अपनी छाती पर, दिल के ऊपर रखिए।",8],["हाथ की गर्माहट महसूस कीजिए। छाती का उठना और गिरना देखिए।",10],["धीरे से साँस अंदर… और धीरे से बाहर।",10],["मन में धीरे से कहिए: अभी यह मुश्किल है।",8],["और: मैं अपने साथ हूँ।",8],["कुछ और साँसों तक ऐसे ही रहिए।",12]]}},
+orient:{cat:"body",en:{n:"Look around slowly",d:"Let your eyes tell your body where you are, and that it's safe.",
+  steps:[["Slowly turn your head to the left. Let your eyes rest on whatever they find.",10],["Now slowly to the right.",10],["Find five different colours around you.",14],["Find something that's round.",10],["Find something soft.",10],["Notice: you're here, in this room, right now.",10]]},
+ hi:{n:"धीरे से चारों ओर देखें",d:"आँखों को शरीर को बताने दें कि आप कहाँ हैं, और यहाँ सुरक्षित है।",
+  steps:[["धीरे से सिर बाईं ओर घुमाइए। आँखें जहाँ रुकें, वहाँ रुकने दीजिए।",10],["अब धीरे से दाईं ओर।",10],["अपने आस-पास पाँच अलग रंग खोजिए।",14],["कोई गोल चीज़ खोजिए।",10],["कोई नरम चीज़ खोजिए।",10],["महसूस कीजिए: आप यहाँ हैं, इसी कमरे में, अभी।",10]]}},
+leaves:{cat:"image",scene:"leaves",en:{n:"Leaves on a stream",d:"Thoughts float away on leaves, instead of being locked up.",
+  steps:[["Imagine sitting beside a slow stream. Leaves drift past on the water.",12],["When a thought comes, place it on a leaf.",12],["Watch it float away. You don't have to push it.",14],["If the same thought comes back, that's okay. Put it on another leaf.",14],["Keep noticing thoughts and letting them float by.",20],["Slowly come back to the room around you.",10]]},
+ hi:{n:"धारा पर पत्ते",d:"विचार पत्तों पर बहकर दूर चले जाते हैं, उन्हें बंद नहीं करना पड़ता।",
+  steps:[["कल्पना कीजिए कि आप एक धीमी धारा के किनारे बैठे हैं। पानी पर पत्ते बह रहे हैं।",12],["जब कोई विचार आए, उसे एक पत्ते पर रख दीजिए।",12],["उसे बहते हुए देखिए। उसे धकेलना नहीं है।",14],["अगर वही विचार लौट आए, कोई बात नहीं। उसे दूसरे पत्ते पर रख दीजिए।",14],["विचारों को देखते रहिए और बहने दीजिए।",20],["धीरे-धीरे अपने कमरे में लौट आइए।",10]]}},
+safe:{cat:"image",scene:"drift",en:{n:"A calm place",d:"Picture a place, real or imagined, where you feel at ease.",
+  steps:[["Think of a place where you feel calm. It can be real or made up.",12],["What can you see there? Notice the colours and the light.",12],["What can you hear?",10],["What's the air like? Warm, cool, fresh?",10],["Give this place a word you can remember it by.",10],["You can come back here whenever you need to.",10]]},
+ hi:{n:"एक शांत जगह",d:"किसी असली या काल्पनिक जगह की कल्पना करें जहाँ आप सहज हों।",
+  steps:[["ऐसी जगह के बारे में सोचिए जहाँ आप शांत महसूस करते हैं। असली या काल्पनिक।",12],["वहाँ क्या दिखता है? रंग और रोशनी पर ध्यान दीजिए।",12],["वहाँ क्या सुनाई देता है?",10],["हवा कैसी है? गर्म, ठंडी, ताज़ा?",10],["इस जगह को एक शब्द दीजिए जिससे आप इसे याद रख सकें।",10],["जब भी ज़रूरत हो, आप यहाँ लौट सकते हैं।",10]]}},
+watch:{cat:"image",en:{n:"Just watch",d:"A slow moving scene and gentle words. Nothing to do."},hi:{n:"बस देखिए",d:"धीमा चलता दृश्य और कोमल शब्द। कुछ करने की ज़रूरत नहीं।"}},
+count:{cat:"mind",en:{n:"Count back by 7",d:"Gives a racing mind one simple task to hold onto."},hi:{n:"7-7 करके उल्टा गिनें",d:"दौड़ते मन को पकड़ने के लिए एक आसान काम।"}},
+worry:{cat:"mind",en:{n:"Worry later",d:"Write the worry down and choose a time to come back to it."},hi:{n:"चिंता बाद में",d:"चिंता लिखिए और उस पर लौटने का समय चुनिए।"}}};
+
+const T={
+en:{help:"Help now",settings:"Settings",today:"Today",journal:"Journal",story:"My Story",wall:"Wall",support:"Support",learn:"Learn",
+learnH:"Learn",learnP:"Short reads based on research and books by researchers, not pop psychology. Each one ends with a question to write about.",
+todayCard:"Today's card",allTopics:"All",strongEv:"Strong evidence",earlyEv:"Promising, still being studied",source:"Source",
+writeAbout:"Does this feel familiar? Write about it",saveCard:"Save",savedCard:"Saved",articles:"Articles",books:"Books",read:"Read",min:"read",
+bookNote:"Picked for being written by researchers or based on research. Look for them at a library or bookshop.",
+suggestH:"Something you might find useful",suggestOff:"Not now",suggestSet:"Suggest reads based on my entries",suggestSetP:"Checked on this device only. Nothing you write is sent anywhere for this.",
+artNoteHi:"",sourcesH:"Sources",
+supH:"When you want more than the app",supP:"Real people, step by step. Start wherever feels okay. Nothing here is live yet — joining a waitlist tells us what to build first.",
+circH:"Support circles",circP:"6–8 people with the same struggle, meeting weekly for a few months with a trained host. Online first, so you can join from your room.",screenP:"Joining starts with a short form and a 15-minute call with a facilitator, so everyone in the circle is there for the right reasons.",pickTheme:"Pick a theme",
+themes:["Leaving an emotionally abusive relationship","Boundaries with family","Handling anger","Loneliness in a new city","Burnout and work stress","Grief and loss"],
+waitlist:"Join the waitlist",onList:"You're on the waitlist",
+meetH:"Meet in person",meetP:"Hosted gatherings for circle members — a walk, tea, a board-game evening. Never arranged one-to-one between strangers.",
+meetRules:["Only after 3 online circle sessions together","Your facilitator approves every attendee, for every gathering","Always a group, led by a trained Aura facilitator","Public partner venues: libraries, cafés, NGO and college spaces","Venue shared only with approved members, the day before","Anyone can quietly opt out of meeting someone, no reason needed","Never mixes themes","Identity verified privately with Aura — others see your first name only"],
+cityPh:"Your city",notifyCity:"Tell me when there's one near me",cityOn:"We'll let you know about gatherings in {c}",
+proH:"Talk to someone trained",proP:"Support grows with what you need, and so does the cost — starting free.",
+steps:[["Peer listener","Someone who's lived something similar, trained to listen","Free or low cost"],["Trained counsellor","Structured talking support from a supervised lay counsellor","Affordable"],["Group therapy","A small group led by a psychologist, so the cost is shared","Cost shared by the group"],["One-to-one counsellor","Private sessions with a supervised trainee or licensed professional","Highest tier"]],
+freeNow:"Free right now: Tele-MANAS, 14416 — trained counsellors, 24×7, in many languages.",locked:"Enter your PIN",
+hello:"How are you, really?",breathe:"Breathe in as it grows, out as it fades",moodQ:"Check in with yourself",
+moods:["Heavy","Low","Okay","Lighter","Good"],todayPrompt:"Something to sit with today",write:"Write",
+lookback:"Looking back",lookbackNone:"Your past entries will show up here, so you can see how far you've come.",
+proto:"Test version — your journal stays on this device.",feedback:"Give feedback on Aura",
+newEntry:"New entry",freeWrite:"Free write",pickPrompt:"Pick a prompt, or just write",placeholder:"Write whatever's on your mind…",
+howFeel:"How are you feeling?",save:"Save",cancel:"Cancel",voice:"Talk instead",stopTalk:"Stop",listening:"Listening… just talk. Pauses are okay.",calmH:"Calm down right now",calmP:"No typing, no AI. Just one thing to do.",breatheB:"Breathe",groundB:"5-4-3-2-1",watchB:"Just watch",
+inhale:"Breathe in",exhale:"Breathe out",done:"I'm done",
+g5:"5 things you can see",g4:"4 things you can touch",g3:"3 things you can hear",g2:"2 things you can smell",g1:"1 thing you can taste",gTap:"Tap a circle for each one you notice",
+watchLines:["You're safe right now.","This feeling will pass, like it has before.","You don't have to do anything.","Just watch it float.","Your body is trying to protect you.","Slowly, the wave gets smaller."],
+afterQ:"How do you feel now?",after:["Better","About the same","Worse"],afterWorse:"That's okay. Talking to someone can help.",afterThanks:"Well done for staying with it.",
+calmNow:"Calm now",moreEx:"More exercises",exLibH:"Find what works for you",exLibP:"Everyone is different. Try a few, and star the ones that help. Starred ones become your go-to on Today and Help now.",tryEx:"Try",goTo:"Your go-to",addGoTo:"Add to my go-to",inGoTo:"In your go-to",
+holdB:"Hold",sighIn1:"Breathe in through your nose",sighIn2:"One more short sip in",sighOut:"Long, slow breath out",restB:"Rest",
+bflyP:"Cross your arms over your chest, hands near your shoulders. Tap slowly with the circles: left, then right.",
+countP:"Start at 100. Take away 7 in your head, then tap to check.",countNext:"Next number",
+worryP:"Write down what's worrying you. You don't have to solve it now.",worryPh:"What's on your mind…",worryWhen:"When will you come back to it?",worryTimes:["This evening","Tomorrow morning","At the weekend"],worrySave:"Put it away for later",worrySaved:"Saved to your journal. It'll be there when you come back to it.",worryPrompt:"Worry for later",
+bodyQ:"How's your body today?",bodyHint:"Optional. Tap anything you've noticed.",bodySyms:["Sleeping badly","Low appetite","Low energy","Hair fall","Headaches","Stomach upset","Losing weight without trying"],
+bodyPattern:"{s}: {n} of the last 14 days",docH:"Worth showing a doctor",docP:"Some of what you've noted is worth getting checked. Aura can't diagnose or suggest medicines, but a doctor can run simple tests and find out what's going on.",
+docSum:"Make a doctor summary",urgentH:"Get help the same day if you notice",urgent:["Fainting or feeling like you might faint","Chest pain","A racing or irregular heartbeat","Severe dizziness or confusion"],urgentCall:"Call 112 in an emergency.",
+moveTip:"If you feel up to it, a short gentle walk or stretch can help. Check with a doctor before anything more, especially if you're losing weight.",
+sumH:"Doctor summary",sumP:"Show this to your doctor, or copy it into a message. Add anything else you want them to know.",sumNotes:"Anything else to add",sumCopy:"Copy summary",sumIntro:"Notes from the last 14 days (from my Aura check-ins):",sumMood:"Mood check-ins:",sumNone:"No body check-ins yet.",ppH:"My pause plan",ppMake:"Make a pause plan for anger",ppOpen:"Open my pause plan",ppEdit:"Edit",ppIntro:"For the moments anger rises. Write it while you're calm, so it's ready when you're not.",
+ppTrig:"What usually sets it off?",ppTrigPh:"e.g. being interrupted, feeling ignored, money talk",ppSigns:"Early warning signs in my body",ppSignsPh:"e.g. jaw tight, face hot, talking faster",
+ppDo:"What I'll do instead",ppDos:["Step away","Breathe","5-4-3-2-1","Drink water","Go for a walk"],ppSay:"What I'll say",ppSayDef:"I need ten minutes. I'll come back and we'll talk.",
+ppBack:"Who I'll come back to, and when",ppBackPh:"e.g. come back to the conversation after 20 minutes",ppSave:"Save plan",ppNow:"Right now:",ppSayNow:"Say:",eyesL:"Eyes closed — guide me with sound",eyesWarn:"A calm voice (or soft tones) will guide you, so you can close your eyes. You can turn it off any time.",eyesOn:"Sound guidance is on",eyesOff:"Turn off sound",toneNote:"Soft tones: rising means breathe in, falling means breathe out.",
+ec5:"Close your eyes. Notice five sounds around you, near or far.",ec4:"Now notice four things you can feel. Your feet on the floor, your hands, your clothes, the air.",ec3:"Take three slow breaths. Count each one.",ec2:"Notice two things you can smell, or just the air going in and out.",ec1:"Say one kind thing to yourself, quietly, in your head.",next:"Next",
+breatheV:["Breathe in, slowly","And out"],calmWeek:"Calm moments this week: {n}. No streaks, just a record.",micHint:"Type, or tap the mic to talk",micLabel:"Talk instead of typing",voiceOff:"Voice typing works in Chrome. On this browser, try the mic button on your keyboard.",voiceTag:"Spoken",listen:"Listen",stopListen:"Stop",
+entries:"Your entries",noEntries:"Nothing here yet. Your journal is private unless you choose to share an entry.",
+back:"Back",reflectBtn:"Reflect with Aura",reflecting:"Reflecting…",reflectNote:"Aura is an AI and can be wrong. It reflects only when you ask.",
+hear:"What I'm hearing",angle:"Another way to look at it",yourPart:"Something to gently notice",step:"One small step",
+reflectOff:"Reflection isn't switched on in this test version yet.",reflectLimit:"You've reached today's reflection limit for the test. Try again tomorrow.",reflectErr:"Couldn't reflect right now. Try again in a bit.",
+share:"Share this entry?",private:"Keep private",wallOpt:"Anonymous wall",circle:"My circle (pilot)",trusted:"Someone I trust",
+want:"What would help?",want0:"Just read it",want1:"I'd like advice",want2:"Has anyone been through this?",
+tomorrow:"Share tomorrow morning instead",shareBtn:"Share",unshare:"Un-share",del:"Delete entry",
+names:"This entry mentions: {n}. Want to remove names before sharing?",copyText:"Copy entry to send",copied:"Copied. Send it however feels safe.",
+shared:"Shared anonymously",scheduled:"Will share tomorrow morning",circleNote:"Your pilot circle will see this at the next meeting.",
+storyIntro:"Write your story once, then choose how much each person gets to read. No more starting from the beginning.",
+short:"Short version",shortH:"A few lines anyone helping you can read first.",fuller:"Fuller version",fullerH:"The chapters you're okay with a listener knowing.",
+privateL:"Private version",privateH:"Only you see this. Write freely.",tags:"Things I can't put into words yet",
+preview:"Preview what a listener sees",layerS:"Short",layerF:"Short + fuller",saveStory:"Save story",saved:"Saved",
+wallIntro:"Entries people chose to share. Reply kindly, ask to talk, or find others in the same boat.",
+reply:"Reply",send:"Send",beenThere:"I've been through this",beenTag:"Been there",replyPh:"Write something kind…",replyRule:"Replies are moderated. No phone numbers, links or social handles. Reply the way they asked.",
+noReplies:"They asked to just be read. Your \"I've felt this too\" tells them they're not alone.",blocked:"Please leave out phone numbers, links and handles. Aura keeps everyone anonymous.",
+askTalk:"Ask to talk",askH:"Ask them to talk?",askP:"We'll ask them privately. Only if they say yes, you'll both get an anonymous one-to-one chat. Either of you can leave or block at any time, and nobody sees your real name or number. Requests only work within the same theme.",allThemes:"All themes",
+askSend:"Send request",askSent:"Request sent — they decide",
+sameBoat:"{n} people felt this too.",joinGroup:"Join a small group: {t}",joined:"You're on the list. A circle on \"{t}\" starts once 6 people join.",
+protoWall:"Replies and requests stay on this device. In the real app they reach real people.",felt:"I've felt this too",sample:"Sample posts for the prototype.",
+you:"You",crisisH:"You don't have to carry this alone",
+crisisP:"If you're in danger right now, call 112. To talk to a trained counsellor, free and any time of day:",
+tele:"Tele-MANAS · 14416 or 1-800-891-4416 · free, 24×7, many languages",copyNum:"Copy 14416",
+trustP:"You could also tell one person you trust that you're not okay. Even one line is enough.",close:"Close",
+gentleH:"This sounds really heavy",gentleP:"What you wrote stays private — nobody else has seen it. Would you like to talk to someone right now?",
+talk:"Show me who I can talk to",notNow:"Not right now",
+setH:"Settings",lang:"Language",pinSet:"Set a 4-digit PIN",pinSave:"Save PIN",pinOff:"Remove PIN",pinOn:"PIN is on",clear:"Erase all my data",
+pinWrong:"That's not it. Try again.",aboutP:"Aura prototype · English and Hindi · v0.1"},
+hi:{help:"अभी मदद",settings:"सेटिंग्स",today:"आज",journal:"डायरी",story:"मेरी कहानी",wall:"दीवार",support:"सहारा",learn:"सीखें",
+learnH:"सीखें",learnP:"शोध और शोधकर्ताओं की किताबों पर आधारित छोटे लेख, पॉप साइकोलॉजी नहीं। हर एक के अंत में लिखने के लिए एक सवाल है।",
+todayCard:"आज का कार्ड",allTopics:"सभी",strongEv:"मज़बूत प्रमाण",earlyEv:"उम्मीद भरा, अभी शोध जारी है",source:"स्रोत",
+writeAbout:"क्या यह जाना-पहचाना लगता है? इसके बारे में लिखें",saveCard:"सहेजें",savedCard:"सहेजा गया",articles:"लेख",books:"किताबें",read:"पढ़ें",min:"पढ़ने में",
+bookNote:"इन्हें इसलिए चुना गया क्योंकि ये शोधकर्ताओं ने लिखी हैं या शोध पर आधारित हैं। लाइब्रेरी या किताब की दुकान पर देखें।",
+suggestH:"शायद यह आपके काम आए",suggestOff:"अभी नहीं",suggestSet:"मेरी एंट्रीज़ के आधार पर पढ़ने के सुझाव दें",suggestSetP:"सिर्फ़ इसी डिवाइस पर जाँचा जाता है। इसके लिए आपका लिखा कहीं नहीं भेजा जाता।",
+artNoteHi:"यह लेख अभी सिर्फ़ अंग्रेज़ी में है। हिंदी अनुवाद जल्द आएगा।",sourcesH:"स्रोत",
+supH:"जब ऐप से ज़्यादा चाहिए",supP:"असली लोग, एक-एक कदम। जहाँ से ठीक लगे, वहाँ से शुरू करें। अभी यहाँ कुछ भी शुरू नहीं हुआ है — वेटलिस्ट से हमें पता चलता है कि पहले क्या बनाएँ।",
+circH:"सहारा सर्कल",circP:"एक जैसी परेशानी वाले 6–8 लोग, कुछ महीनों तक हर हफ़्ते, एक प्रशिक्षित होस्ट के साथ। पहले ऑनलाइन, ताकि आप अपने कमरे से जुड़ सकें।",screenP:"जुड़ने से पहले एक छोटा फ़ॉर्म और फ़ैसिलिटेटर के साथ 15 मिनट की बातचीत होती है, ताकि सर्कल में सब सही वजह से हों।",pickTheme:"एक विषय चुनें",
+themes:["भावनात्मक रूप से हिंसक रिश्ते से निकलना","परिवार के साथ सीमाएँ","गुस्से को संभालना","नए शहर में अकेलापन","थकान और काम का तनाव","दुख और किसी को खोना"],
+waitlist:"वेटलिस्ट में जुड़ें",onList:"आप वेटलिस्ट में हैं",
+meetH:"आमने-सामने मिलें",meetP:"सर्कल के सदस्यों के लिए होस्ट की गई मुलाक़ातें — सैर, चाय, बोर्ड-गेम की शाम। अजनबियों के बीच कभी अकेले में मुलाक़ात नहीं।",
+meetRules:["साथ में 3 ऑनलाइन सर्कल सेशन के बाद ही","हर मुलाक़ात के लिए फ़ैसिलिटेटर हर सदस्य को मंज़ूरी देता है","हमेशा समूह में, प्रशिक्षित Aura फ़ैसिलिटेटर के साथ","सार्वजनिक पार्टनर जगहें: लाइब्रेरी, कैफ़े, NGO और कॉलेज","जगह सिर्फ़ मंज़ूर सदस्यों को, एक दिन पहले बताई जाती है","कोई भी बिना कारण बताए किसी से मिलने से मना कर सकता है","अलग-अलग विषयों के लोग साथ नहीं मिलते","पहचान Aura के साथ निजी रूप से सत्यापित — बाकी लोग सिर्फ़ पहला नाम देखते हैं"],
+cityPh:"आपका शहर",notifyCity:"मेरे पास कोई मुलाक़ात हो तो बताएँ",cityOn:"{c} में मुलाक़ातों के बारे में हम आपको बताएँगे",
+proH:"किसी प्रशिक्षित से बात करें",proP:"सहारा आपकी ज़रूरत के साथ बढ़ता है, और खर्च भी — शुरुआत मुफ़्त से।",
+steps:[["पीयर लिसनर","कोई जिसने मिलता-जुलता अनुभव जिया हो, सुनने के लिए प्रशिक्षित","मुफ़्त या बहुत कम खर्च"],["प्रशिक्षित काउंसलर","निगरानी में काम करने वाले काउंसलर से बातचीत","किफ़ायती"],["ग्रुप थेरेपी","मनोवैज्ञानिक के साथ छोटा समूह, खर्च सब में बँटता है","खर्च समूह में बँटा"],["वन-टू-वन काउंसलर","निगरानी में प्रशिक्षु या लाइसेंस प्राप्त पेशेवर के साथ निजी सेशन","सबसे ऊँचा स्तर"]],
+freeNow:"अभी मुफ़्त: टेली-मानस, 14416 — प्रशिक्षित काउंसलर, 24×7, कई भाषाओं में।",locked:"अपना पिन डालें",
+hello:"सच में, आप कैसे हैं?",breathe:"बढ़ते समय साँस लें, घटते समय छोड़ें",moodQ:"खुद से पूछिए",
+moods:["भारी","उदास","ठीक","हल्का","अच्छा"],todayPrompt:"आज सोचने के लिए कुछ",write:"लिखें",
+lookback:"पीछे मुड़कर देखें",lookbackNone:"आपकी पुरानी बातें यहाँ दिखेंगी, ताकि आप देख सकें कि आप कितना आगे आए हैं।",
+proto:"टेस्ट वर्ज़न — आपकी डायरी इसी डिवाइस पर रहती है।",feedback:"Aura पर अपनी राय दें",
+newEntry:"नई एंट्री",freeWrite:"खुलकर लिखें",pickPrompt:"कोई सवाल चुनें, या बस लिखें",placeholder:"जो भी मन में है, लिखिए…",
+howFeel:"आप कैसा महसूस कर रहे हैं?",save:"सहेजें",cancel:"रद्द करें",voice:"बोलकर बताएँ",stopTalk:"रोकें",listening:"सुन रहा है… बस बोलिए। रुकना भी ठीक है।",calmH:"अभी शांत होइए",calmP:"न लिखना, न AI। बस एक काम।",breatheB:"साँस",groundB:"5-4-3-2-1",watchB:"बस देखिए",
+inhale:"साँस अंदर लें",exhale:"साँस बाहर छोड़ें",done:"हो गया",
+g5:"5 चीज़ें जो आप देख सकते हैं",g4:"4 चीज़ें जिन्हें आप छू सकते हैं",g3:"3 आवाज़ें जो आप सुन सकते हैं",g2:"2 चीज़ें जिनकी गंध आ रही है",g1:"1 चीज़ जिसका स्वाद आप महसूस कर सकते हैं",gTap:"जो भी चीज़ दिखे, उसके लिए एक गोला दबाएँ",
+watchLines:["आप अभी सुरक्षित हैं।","यह एहसास गुज़र जाएगा, जैसे पहले गुज़रा है।","आपको कुछ करने की ज़रूरत नहीं।","बस इसे तैरते हुए देखिए।","आपका शरीर आपको बचाने की कोशिश कर रहा है।","धीरे-धीरे, लहर छोटी हो रही है।"],
+afterQ:"अब आप कैसा महसूस कर रहे हैं?",after:["बेहतर","लगभग वैसा ही","और बुरा"],afterWorse:"कोई बात नहीं। किसी से बात करने से मदद मिल सकती है।",afterThanks:"इसके साथ बने रहने के लिए शाबाश।",
+calmNow:"अभी शांत हों",moreEx:"और एक्सरसाइज़",exLibH:"जो आपके लिए काम करे, उसे खोजिए",exLibP:"हर कोई अलग है। कुछ आज़माइए, और जो मदद करें उन्हें स्टार कीजिए। स्टार वाले आज और अभी मदद में सबसे पहले दिखेंगे।",tryEx:"आज़माएँ",goTo:"आपके पसंदीदा",addGoTo:"पसंदीदा में जोड़ें",inGoTo:"पसंदीदा में है",
+holdB:"रोकिए",sighIn1:"नाक से साँस अंदर लीजिए",sighIn2:"एक और छोटी साँस अंदर",sighOut:"लंबी, धीमी साँस बाहर",restB:"आराम",
+bflyP:"हाथों को छाती पर क्रॉस कीजिए, हथेलियाँ कंधों के पास। गोलों के साथ धीरे-धीरे थपथपाइए: बायाँ, फिर दायाँ।",
+countP:"100 से शुरू कीजिए। मन में 7 घटाइए, फिर जाँचने के लिए दबाइए।",countNext:"अगली संख्या",
+worryP:"जो चिंता है, उसे लिख दीजिए। अभी हल करने की ज़रूरत नहीं।",worryPh:"मन में क्या चल रहा है…",worryWhen:"आप इस पर कब लौटेंगे?",worryTimes:["आज शाम","कल सुबह","वीकेंड पर"],worrySave:"इसे बाद के लिए रख दें",worrySaved:"डायरी में सहेजा गया। जब लौटेंगे, यहीं मिलेगा।",worryPrompt:"बाद के लिए चिंता",
+bodyQ:"आज शरीर कैसा है?",bodyHint:"वैकल्पिक। जो भी महसूस किया हो, उसे दबाइए।",bodySyms:["नींद ठीक नहीं","भूख कम","ऊर्जा कम","बाल झड़ना","सिरदर्द","पेट खराब","बिना कोशिश वज़न घटना"],
+bodyPattern:"{s}: पिछले 14 में से {n} दिन",docH:"डॉक्टर को दिखाना ठीक रहेगा",docP:"आपने जो लिखा है, उसमें से कुछ की जाँच करवाना अच्छा होगा। Aura बीमारी नहीं बता सकता या दवा नहीं सुझा सकता, पर डॉक्टर आसान टेस्ट करके पता लगा सकते हैं।",
+docSum:"डॉक्टर के लिए सारांश बनाएँ",urgentH:"अगर ये दिखें तो उसी दिन मदद लें",urgent:["बेहोशी या बेहोश होने जैसा लगना","सीने में दर्द","दिल का तेज़ या अनियमित धड़कना","तेज़ चक्कर या उलझन"],urgentCall:"आपात स्थिति में 112 पर कॉल करें।",
+moveTip:"अगर मन हो, तो थोड़ी हल्की सैर या स्ट्रेचिंग मदद कर सकती है। इससे ज़्यादा कुछ करने से पहले डॉक्टर से पूछें, खासकर अगर वज़न घट रहा हो।",
+sumH:"डॉक्टर के लिए सारांश",sumP:"इसे अपने डॉक्टर को दिखाइए, या मैसेज में कॉपी कीजिए। और कुछ बताना हो तो जोड़िए।",sumNotes:"और कुछ जोड़ना हो",sumCopy:"सारांश कॉपी करें",sumIntro:"पिछले 14 दिनों के नोट्स (मेरे Aura चेक-इन से):",sumMood:"मूड चेक-इन:",sumNone:"अभी कोई शरीर चेक-इन नहीं।",ppH:"मेरा पॉज़ प्लान",ppMake:"गुस्से के लिए पॉज़ प्लान बनाएँ",ppOpen:"मेरा पॉज़ प्लान खोलें",ppEdit:"बदलें",ppIntro:"उन पलों के लिए जब गुस्सा बढ़ता है। इसे शांत रहते हुए लिखें, ताकि ज़रूरत पड़ने पर तैयार रहे।",
+ppTrig:"आमतौर पर किस बात से गुस्सा आता है?",ppTrigPh:"जैसे बीच में टोका जाना, अनदेखा महसूस होना, पैसों की बात",ppSigns:"शरीर में शुरुआती संकेत",ppSignsPh:"जैसे जबड़ा कसना, चेहरा गर्म होना, तेज़ बोलना",
+ppDo:"इसके बजाय मैं क्या करूँगा/करूँगी",ppDos:["वहाँ से हटना","साँस लेना","5-4-3-2-1","पानी पीना","टहलने जाना"],ppSay:"मैं क्या कहूँगा/कहूँगी",ppSayDef:"मुझे दस मिनट चाहिए। मैं वापस आकर बात करूँगा/करूँगी।",
+ppBack:"किसके पास और कब वापस आऊँगा/आऊँगी",ppBackPh:"जैसे 20 मिनट बाद बातचीत पर वापस आना",ppSave:"प्लान सहेजें",ppNow:"अभी:",ppSayNow:"कहें:",eyesL:"आँखें बंद — आवाज़ से मार्गदर्शन",eyesWarn:"एक शांत आवाज़ (या हल्की धुन) आपका मार्गदर्शन करेगी, ताकि आप आँखें बंद कर सकें। आप इसे कभी भी बंद कर सकते हैं।",eyesOn:"आवाज़ से मार्गदर्शन चालू है",eyesOff:"आवाज़ बंद करें",toneNote:"हल्की धुन: ऊपर जाती धुन पर साँस लें, नीचे जाती धुन पर छोड़ें।",
+ec5:"आँखें बंद कीजिए। अपने आस-पास की पाँच आवाज़ों पर ध्यान दीजिए, पास की या दूर की।",ec4:"अब चार चीज़ें महसूस कीजिए। ज़मीन पर पैर, अपने हाथ, अपने कपड़े, हवा।",ec3:"तीन धीमी साँसें लीजिए। हर साँस गिनिए।",ec2:"दो गंधों पर ध्यान दीजिए, या बस अंदर-बाहर जाती हवा पर।",ec1:"अपने मन में, धीरे से, खुद से एक प्यारी बात कहिए।",next:"आगे",
+breatheV:["धीरे से साँस अंदर लीजिए","और बाहर छोड़िए"],calmWeek:"इस हफ़्ते शांत पल: {n}। कोई स्ट्रीक नहीं, बस एक रिकॉर्ड।",micHint:"लिखें, या माइक दबाकर बोलें",micLabel:"लिखने के बजाय बोलें",voiceOff:"बोलकर लिखना Chrome में काम करता है। इस ब्राउज़र में, कीबोर्ड का माइक बटन आज़माएँ।",voiceTag:"बोलकर",listen:"सुनें",stopListen:"रोकें",
+entries:"आपकी एंट्रीज़",noEntries:"अभी यहाँ कुछ नहीं है। आपकी डायरी निजी है, जब तक आप खुद कुछ साझा न करें।",
+back:"वापस",reflectBtn:"Aura के साथ सोचें",reflecting:"सोच रहा है…",reflectNote:"Aura एक AI है और गलत हो सकता है। यह तभी सोचता है जब आप कहें।",
+hear:"मैं जो सुन रहा हूँ",angle:"इसे देखने का एक और तरीका",yourPart:"धीरे से ध्यान देने लायक",step:"एक छोटा कदम",
+reflectOff:"इस टेस्ट वर्ज़न में यह सुविधा अभी चालू नहीं है।",reflectLimit:"टेस्ट के लिए आज की सीमा पूरी हो गई। कल फिर कोशिश करें।",reflectErr:"अभी नहीं हो पाया। थोड़ी देर बाद फिर कोशिश करें।",
+share:"यह एंट्री साझा करें?",private:"निजी रखें",wallOpt:"गुमनाम दीवार",circle:"मेरा सर्कल (पायलट)",trusted:"कोई भरोसेमंद",
+want:"किस चीज़ से मदद मिलेगी?",want0:"बस पढ़ लीजिए",want1:"मुझे सलाह चाहिए",want2:"क्या किसी के साथ ऐसा हुआ है?",
+tomorrow:"इसके बजाय कल सुबह साझा करें",shareBtn:"साझा करें",unshare:"साझा करना बंद करें",del:"एंट्री हटाएँ",
+names:"इस एंट्री में ये नाम हैं: {n}। साझा करने से पहले हटाना चाहेंगे?",copyText:"भेजने के लिए कॉपी करें",copied:"कॉपी हो गया। जैसे सुरक्षित लगे, वैसे भेजें।",
+shared:"गुमनाम रूप से साझा किया",scheduled:"कल सुबह साझा होगा",circleNote:"आपका पायलट सर्कल इसे अगली मीटिंग में देखेगा।",
+storyIntro:"अपनी कहानी एक बार लिखें, फिर तय करें कि कौन कितना पढ़ सकता है। अब हर बार शुरू से बताने की ज़रूरत नहीं।",
+short:"छोटा रूप",shortH:"कुछ पंक्तियाँ, जो आपकी मदद करने वाला पहले पढ़ सके।",fuller:"विस्तृत रूप",fullerH:"वे हिस्से जो आप किसी सुनने वाले को बताने में सहज हैं।",
+privateL:"निजी रूप",privateH:"यह सिर्फ़ आप देख सकते हैं। खुलकर लिखें।",tags:"वो बातें जो अभी शब्दों में नहीं कह पाते",
+preview:"देखें कि सुनने वाले को क्या दिखेगा",layerS:"छोटा",layerF:"छोटा + विस्तृत",saveStory:"कहानी सहेजें",saved:"सहेजा गया",
+wallIntro:"वो एंट्रीज़ जो लोगों ने साझा करना चुना। प्यार से जवाब दें, बात करने के लिए पूछें, या अपने जैसे लोगों को खोजें।",
+reply:"जवाब दें",send:"भेजें",beenThere:"मैं भी इससे गुज़रा/गुज़री हूँ",beenTag:"गुज़र चुके",replyPh:"कुछ प्यार भरा लिखिए…",replyRule:"जवाबों की निगरानी होती है। फ़ोन नंबर, लिंक या सोशल हैंडल नहीं। जैसा उन्होंने कहा है, वैसे जवाब दें।",
+noReplies:"उन्होंने बस पढ़े जाने को कहा है। आपका \"मैंने भी ऐसा महसूस किया है\" उन्हें बताता है कि वो अकेले नहीं हैं।",blocked:"कृपया फ़ोन नंबर, लिंक और हैंडल न लिखें। Aura सबको गुमनाम रखता है।",
+askTalk:"बात करने के लिए पूछें",askH:"क्या उनसे बात करने के लिए पूछें?",askP:"हम उनसे निजी तौर पर पूछेंगे। अगर वो हाँ कहें, तभी आप दोनों को एक गुमनाम चैट मिलेगी। आप दोनों कभी भी छोड़ या ब्लॉक कर सकते हैं, और कोई आपका असली नाम या नंबर नहीं देखेगा। अनुरोध सिर्फ़ एक ही विषय के अंदर काम करते हैं।",allThemes:"सभी विषय",
+askSend:"अनुरोध भेजें",askSent:"अनुरोध भेजा गया — फ़ैसला उनका है",
+sameBoat:"{n} लोगों ने भी ऐसा महसूस किया।",joinGroup:"एक छोटे समूह से जुड़ें: {t}",joined:"आप सूची में हैं। \"{t}\" पर सर्कल 6 लोगों के जुड़ते ही शुरू होगा।",
+protoWall:"जवाब और अनुरोध इसी डिवाइस पर रहते हैं। असली ऐप में ये असली लोगों तक पहुँचेंगे।",felt:"मैंने भी ऐसा महसूस किया है",sample:"प्रोटोटाइप के लिए नमूना पोस्ट।",
+you:"आप",crisisH:"आपको यह अकेले नहीं उठाना है",
+crisisP:"अगर आप अभी खतरे में हैं, तो 112 पर कॉल करें। किसी प्रशिक्षित काउंसलर से बात करने के लिए, मुफ़्त और किसी भी समय:",
+tele:"टेली-मानस · 14416 या 1-800-891-4416 · मुफ़्त, 24×7, कई भाषाओं में",copyNum:"14416 कॉपी करें",
+trustP:"आप किसी एक भरोसेमंद इंसान को भी बता सकते हैं कि आप ठीक नहीं हैं। एक पंक्ति भी काफ़ी है।",close:"बंद करें",
+gentleH:"यह बहुत भारी लग रहा है",gentleP:"आपने जो लिखा वो निजी है — किसी और ने इसे नहीं देखा। क्या आप अभी किसी से बात करना चाहेंगे?",
+talk:"दिखाइए किससे बात कर सकता/सकती हूँ",notNow:"अभी नहीं",
+setH:"सेटिंग्स",lang:"भाषा",pinSet:"4 अंकों का पिन सेट करें",pinSave:"पिन सहेजें",pinOff:"पिन हटाएँ",pinOn:"पिन चालू है",clear:"मेरा सारा डेटा मिटाएँ",
+pinWrong:"यह सही नहीं है। फिर से कोशिश करें।",aboutP:"Aura प्रोटोटाइप · अंग्रेज़ी और हिंदी · v0.1"}};
+
+const PROMPTS={en:["What's weighing on you most right now?","What's the story you're telling yourself about this? Is there another way to read it?","What's one small thing that felt okay today?","What would you say to a friend who wrote this?","Where did you feel it in your body today?","What do you need right now that you're not getting?"],
+hi:["अभी सबसे ज़्यादा किस बात का बोझ है?","इस बारे में आप खुद को कौन-सी कहानी सुना रहे हैं? क्या इसे किसी और तरह भी देखा जा सकता है?","आज कौन-सी एक छोटी चीज़ ठीक लगी?","अगर किसी दोस्त ने यह लिखा होता, तो आप उससे क्या कहते?","आज यह भावना शरीर में कहाँ महसूस हुई?","अभी आपको किस चीज़ की ज़रूरत है जो नहीं मिल रही?"]};
+const TAGS={en:["Family pressure","Emotional neglect","Leaving a relationship","Betrayal","Loneliness","Burnout","Guilt about boundaries","Grief"],
+hi:["परिवार का दबाव","भावनात्मक उपेक्षा","रिश्ता छोड़ना","धोखा","अकेलापन","थकान / बर्नआउट","सीमाएँ तय करने का अपराधबोध","दुख / शोक"]};
+const SAMPLE_POSTS=[
+{text:"Told my parents I can't come home every weekend anymore. They said I've changed. I have. I still feel like the villain though.",want:2,felt:14,theme:{en:"Boundaries with family",hi:"परिवार के साथ सीमाएँ"},
+ replies:[{text:"Same with my mother. It took about a year before she stopped calling it 'changing'. You're allowed to need space.",been:true}]},
+{text:"Shouted at my sister over something tiny again. Saw her face and hated myself. I grew up in a house where yelling was normal and I don't want to be that person.",want:2,felt:11,theme:{en:"Handling anger",hi:"गुस्से को संभालना"},
+ replies:[{text:"Noticing her face is where it starts. What helped me was walking out mid-sentence and saying I'd come back. It felt rude at first, but it was so much kinder than finishing the shout.",been:true}]},
+{text:"Third night of not sleeping. Not looking for advice, I just didn't want to be the only one awake with this.",want:0,felt:23,theme:{en:"Sleepless nights",hi:"नींद न आने वाली रातें"},replies:[]},
+{text:"He used to read my messages and call it caring. I'm only now realising that wasn't normal.",want:2,felt:31,theme:{en:"Leaving a controlling relationship",hi:"नियंत्रण वाले रिश्ते से निकलना"},
+ replies:[{text:"Realising it is the hardest part, and you've done it. It took me months to stop checking if someone was reading over my shoulder.",been:true},{text:"Not the same thing, but I'm glad you wrote this down.",been:false}]},
+{text:"आज ऑफिस में किसी से बात नहीं की। घर आकर भी नहीं। बस लिख रही हूँ ताकि लगे कि किसी से बात की।",want:1,felt:9,theme:{en:"Loneliness in a new city",hi:"नए शहर में अकेलापन"},
+ replies:[{text:"मैं भी नए शहर में हूँ। मैंने वीकेंड पर एक बुक क्लब जॉइन किया, पहले अजीब लगा पर अब अच्छा लगता है।",been:true}]}];
+const CRISIS=/kill myself|end my life|want to die|wanna die|don'?t want to live|no reason to live|better off without me|suicid|self[- ]?harm|hurt myself|cut myself|मर जाना|मरना चाहत|जीना नहीं|जीने का मन नहीं|आत्महत्या|खुद को नुकसान|ख़ुद को नुकसान/i;
+
+const mem={};
+const store={get(k,d){try{const v=localStorage.getItem("aura."+k);return v===null?(k in mem?mem[k]:d):JSON.parse(v)}catch(e){return k in mem?mem[k]:d}},
+set(k,v){mem[k]=v;try{localStorage.setItem("aura."+k,JSON.stringify(v))}catch(e){}},
+clear(){for(const k in mem)delete mem[k];try{Object.keys(localStorage).filter(k=>k.startsWith("aura.")).forEach(k=>localStorage.removeItem(k))}catch(e){}}};
+
+let lang=store.get("lang","en"),tab="today",view=null,sample=null,dict=null,tts=null,micOn=false,comp={draft:"",voice:false};
+const t=k=>T[lang][k];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $=id=>document.getElementById(id);
+const entries=()=>store.get("entries",[]);
+const saveEntries=e=>store.set("entries",e);
+const fmt=ts=>new Date(ts).toLocaleDateString(lang==="hi"?"hi-IN":"en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+const toast=m=>{const el=$("toast");el.textContent=m;el.style.display="block";clearTimeout(toast.h);toast.h=setTimeout(()=>el.style.display="none",2600)};
+
+function chrome(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll("[data-t]").forEach(el=>el.textContent=t(el.dataset.t));
+  $("langBtn").textContent=lang==="en"?"हिं":"EN";
+  $("tabs").innerHTML=["today","journal","story","learn","wall","support"].map(k=>`<button data-tab="${k}" aria-current="${tab===k&&!view}">${t(k)}</button>`).join("");
+}
+function render(){chrome();const m=$("main");
+  if(view&&view.type==="new")m.innerHTML=newEntryHTML();
+  else if(view&&view.type==="entry")m.innerHTML=entryHTML(view.id);
+  else m.innerHTML={today:todayHTML,journal:journalHTML,story:storyHTML,wall:wallHTML,support:supportHTML,learn:learnHTML}[tab]();
+  micUI();
+  const key=tab+"|"+(view?view.type+(view.id||""):"")+(openArt?"a":"");if(key!==render.last)window.scrollTo(0,0);render.last=key;
+}
+function bodyStats(){const bl=store.get("body",{}),cnt=Array(7).fill(0);for(let i=0;i<14;i++){const d=new Date(Date.now()-i*864e5).toDateString();(bl[d]||[]).forEach(s=>cnt[s]++)}return cnt}
+function needsDoctor(c){return c[6]>=2||(c[3]>=1&&c[6]>=1)||c.some(n=>n>=7)}
+function bodyCardHTML(){const today=store.get("body",{})[new Date().toDateString()]||[],c=bodyStats(),S=t("bodySyms");
+  const pats=c.map((n,i)=>n>=3?t("bodyPattern").replace("{s}",S[i]).replace("{n}",n):null).filter(Boolean);
+  return `<div class="card"><h3>${t("bodyQ")}</h3><p class="note" style="margin-top:0">${t("bodyHint")}</p><div class="row">${S.map((x,i)=>`<button class="chip" data-sym="${i}" aria-pressed="${today.includes(i)}">${x}</button>`).join("")}</div>
+  ${pats.length?`<ul class="muted" style="padding-left:20px;margin:12px 0 0">${pats.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}
+  ${today.includes(2)&&!today.includes(6)&&c[6]===0?`<p class="note" style="margin-top:10px">${t("moveTip")}</p>`:""}
+  ${needsDoctor(c)?`<div class="card warn" style="margin:12px 0 0"><strong>${t("docH")}</strong><p style="margin:6px 0 10px">${t("docP")}</p><button class="primary" data-act="docSum">${t("docSum")}</button>
+   <p style="margin:14px 0 4px"><strong>${t("urgentH")}</strong></p><ul style="padding-left:20px;margin:0">${t("urgent").map(u=>`<li>${u}</li>`).join("")}</ul><p class="note">${t("urgentCall")}</p></div>`:""}</div>`}
+function docSummary(){const c=bodyStats(),S=t("bodySyms"),lines=c.map((n,i)=>n?`- ${S[i]}: ${n}/14 ${lang==="hi"?"दिन":"days"}`:null).filter(Boolean);
+  const ml=entries().filter(e=>Date.now()-e.ts<14*864e5&&e.mood!=null).map(e=>e.mood);const mc=t("moods").map((m,i)=>`${m} ${ml.filter(x=>x===i).length}`).join(", ");
+  const txt=`${t("sumIntro")}\n${lines.length?lines.join("\n"):t("sumNone")}\n${t("sumMood")} ${mc}`;
+  openSheet(`<h2>${t("sumH")}</h2><p class="muted">${t("sumP")}</p><textarea id="sumTxt" style="min-height:170px">${esc(txt)}</textarea>
+  <label for="sumNotes">${t("sumNotes")}</label><textarea id="sumNotes" style="min-height:80px"></textarea>
+  <div class="row" style="margin-top:12px"><button class="primary" data-act="sumCopy">${t("sumCopy")}</button><button data-act="closeSheet">${t("close")}</button></div>`)}
+function todayPromptText(){return PROMPTS[lang][new Date().getDate()%PROMPTS[lang].length]}
+function todayHTML(){
+  const e=entries(),mood=store.get("todayMood",null);
+  const p=todayPromptText();
+  const old=e.length>1?e[e.length-1]:null;
+  return `<h1>${t("hello")}</h1>
+  <div class="glow" aria-hidden="true"><span>${t("breathe")}</span></div>
+  <div class="card"><h3>${t("calmNow")}</h3>${calmToolsHTML()}<p style="margin:12px 0 0"><button data-act="pp">${store.get("pp",null)?t("ppOpen"):t("ppMake")}</button></p>${(()=>{const n=store.get("calmLog",[]).filter(c=>Date.now()-c.ts<7*864e5).length;return n?`<p class="note" style="margin-top:10px">${t("calmWeek").replace("{n}",n)}</p>`:""})()}</div>
+  ${bodyCardHTML()}
+  <div class="card"><h3>${t("moodQ")}</h3><div class="row">${t("moods").map((m,i)=>`<button class="chip" data-mood="${i}" aria-pressed="${mood&&mood.d===new Date().toDateString()&&mood.i===i}">${m}</button>`).join("")}</div></div>
+  <div class="card"><p class="muted">${t("todayPrompt")}</p><h2>${esc(p)}</h2>${composerHTML(comp.draft)}</div>
+  ${(()=>{const c=CARDS[new Date().getDate()%CARDS.length];return `<button class="card entry" data-tab="learn"><small>${t("todayCard")} · ${esc(TOPICS[lang][c.topic])}</small><strong>${esc(c[lang].t)}</strong></button>`})()}
+  <div class="card"><h3>${t("lookback")}</h3>${old?`<p class="muted">${fmt(old.ts)}</p><p>${esc(old.text.slice(0,180))}${old.text.length>180?"…":""}</p><button data-open="${old.id}">${t("journal")} →</button>`:`<p class="muted">${t("lookbackNone")}</p>`}</div>
+  <p class="note">${t("proto")}</p>${FEEDBACK_URL?`<p><a class="btn" href="${FEEDBACK_URL}" target="_blank" rel="noopener">${t("feedback")}</a></p>`:""}`;
+}
+function journalHTML(){
+  const e=entries().slice().reverse();
+  return `<div class="row" style="justify-content:space-between;margin-bottom:12px"><h1 style="margin:0">${t("entries")}</h1><button class="primary" data-act="new">${t("newEntry")}</button></div>
+  ${e.length?e.map(x=>`<button class="card entry" data-open="${x.id}"><small>${fmt(x.ts)}${x.mood!=null?`<span class="mood">${t("moods")[x.mood]}</span>`:""}${x.voice?` · ${t("voiceTag")}`:""}${x.share&&x.share!=="private"?` · ${shareLabel(x)}`:""}</small>${x.prompt?`<strong>${esc(x.prompt)}</strong><br>`:""}${esc(x.text.slice(0,140))}${x.text.length>140?"…":""}</button>`).join(""):`<div class="card"><p class="muted">${t("noEntries")}</p></div>`}`;
+}
+function shareLabel(x){return x.share==="wall"?(x.tomorrow&&Date.now()<x.shareAt?t("scheduled"):t("shared")):x.share==="circle"?t("circle"):""}
+function newEntryHTML(){
+  return `<button class="ghost" data-act="back">← ${t("back")}</button><h1 style="margin-top:12px">${t("newEntry")}</h1>
+  <p class="muted">${t("pickPrompt")}</p>
+  <div class="row">${[t("freeWrite"),...PROMPTS[lang]].map((p,i)=>`<button class="chip" data-prompt-pick="${i}" aria-pressed="${(view.prompt||"")===(i?p:"")}">${esc(p)}</button>`).join("")}</div>
+  ${view.prompt?`<h2 style="margin-top:16px">${esc(view.prompt)}</h2>`:""}
+  <div style="margin-top:14px">${composerHTML(view.draft)}</div>
+  <label>${t("howFeel")}</label><div class="row">${t("moods").map((m,i)=>`<button class="chip" data-emood="${i}" aria-pressed="${view.mood===i}">${m}</button>`).join("")}</div>
+  <p style="margin-top:14px"><button data-act="back">${t("cancel")}</button></p>`;
+}
+const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+function composerHTML(draft){return `<div class="composer"><textarea id="txt" aria-label="${t("placeholder")}" placeholder="${t("placeholder")}">${esc(draft||"")}</textarea>
+  <div class="cbar"><button class="mic" id="micBtn" data-act="mic" aria-pressed="false" aria-label="${t("micLabel")}" title="${t("micLabel")}">${MIC}</button><span class="grow" id="micState">${t("micHint")}</span><button class="primary" data-act="save">${t("save")}</button></div></div>
+  <p class="muted" id="partial" style="font-style:italic;margin-top:8px"></p>`}
+function findNames(text){
+  const out=new Set(),re=/(^|[^.!?\n]\s)([A-Z][a-z]{2,})/g;let m;
+  const skip=/^(The|This|That|They|Then|There|What|When|Why|How|And|But|Not|Just|Today|Tomorrow|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|English|Hindi|God|Mom|Dad|Maa|Papa)$/;
+  while((m=re.exec(text)))if(!skip.test(m[2]))out.add(m[2]);
+  return [...out];
+}
+function entryHTML(id){
+  const x=entries().find(e=>e.id===id);if(!x){view=null;return journalHTML()}
+  const names=findNames(x.text);const sh=x.share||"private";
+  const r=x.reflection;
+  return `<button class="ghost" data-act="back">← ${t("back")}</button>
+  <div class="card" style="margin-top:12px"><small class="muted">${fmt(x.ts)}${x.mood!=null?`<span class="mood">${t("moods")[x.mood]}</span>`:""}</small>
+  ${x.prompt?`<h2 style="margin-top:8px">${esc(x.prompt)}</h2>`:""}<p class="post" style="white-space:pre-wrap">${esc(x.text)}</p></div>
+  ${(()=>{const sg=x.suggest&&CARDS.find(c=>c.id===x.suggest);return sg?`<div class="card" style="border-color:var(--teal)"><p class="note" style="margin:0 0 4px">${t("suggestH")}</p><strong>${esc(sg[lang].t)}</strong>
+   <div class="row" style="margin-top:8px"><button class="primary" data-suggopen="${sg.id}">${t("read")}</button><button class="ghost" data-act="suggOff">${t("suggestOff")}</button></div></div>`:""})()}
+  <div class="card reflect" id="refl">
+   ${r?reflHTML(r):`<button class="primary" data-act="reflect">${t("reflectBtn")}</button>`}
+   <p class="note" style="margin-top:10px">${t("reflectNote")}</p>
+  </div>
+  <div class="card"><h3>${t("share")}</h3>
+   <div class="row">${[["private",t("private")],["wall",t("wallOpt")],["circle",t("circle")],["trusted",t("trusted")]].map(([k,l])=>`<button class="chip" data-share="${k}" aria-pressed="${(view.shareSel||sh)===k}">${l}</button>`).join("")}</div>
+   ${shareOptsHTML(x,names)}
+  </div>
+  <button class="ghost" data-act="delete" style="color:var(--coral)">${t("del")}</button>`;
+}
+function shareOptsHTML(x,names){
+  const sel=view.shareSel||x.share||"private";
+  if(sel==="private")return x.share&&x.share!=="private"?`<p style="margin-top:12px"><button data-act="unshare">${t("unshare")}</button></p>`:"";
+  const nameWarn=names.length&&sel!=="trusted"?`<div class="card warn" style="margin-top:12px">${esc(t("names").replace("{n}",names.join(", ")))}</div>`:"";
+  if(sel==="trusted")return `<p class="muted" style="margin-top:12px">${t("trustP")}</p><button data-act="copy">${t("copyText")}</button>`;
+  const want=view.want??x.want??0;
+  const isShared=x.share===sel;
+  return `${nameWarn}<label>${t("want")}</label><div class="row">${[0,1,2].map(i=>`<button class="chip" data-want="${i}" aria-pressed="${want===i}">${t("want"+i)}</button>`).join("")}</div>
+   ${sel==="wall"?`<label style="font-weight:400;display:flex;gap:10px;align-items:center"><input type="checkbox" id="tmr" style="width:22px;height:22px" ${view.tomorrow??x.tomorrow?"checked":""}> ${t("tomorrow")}</label>`:`<p class="muted">${t("circleNote")}</p>`}
+   <div class="row" style="margin-top:10px"><button class="primary" data-act="share">${t("shareBtn")}</button>${isShared?`<button data-act="unshare">${t("unshare")}</button>`:""}</div>
+   ${isShared?`<p class="muted">${shareLabel(x)}</p>`:""}`;
+}
+function reflHTML(r){
+  if(r.raw)return `<p style="white-space:pre-wrap">${esc(r.raw)}</p>`;
+  return `<div class="row" style="justify-content:flex-end"><button class="chip" id="spkBtn" data-act="listen" ${tts?"":"hidden"}>${t("listen")}</button></div><h3>${t("hear")}</h3><p>${esc(r.hear)}</p><h3>${t("angle")}</h3><p>${esc(r.angle)}</p>${r.yourPart?`<h3>${t("yourPart")}</h3><p>${esc(r.yourPart)}</p>`:""}<h3>${t("step")}</h3><p>${esc(r.step)}</p>`;
+}
+function storyHTML(){
+  const s=store.get("story",{short:"",fuller:"",priv:"",tags:[]});const layer=view&&view.layer||store.get("layer","s");
+  const tagList=TAGS[lang];
+  return `<h1>${t("story")}</h1><p class="muted">${t("storyIntro")}</p>
+  <div class="card"><label for="sShort" style="margin-top:0">${t("short")}</label><p class="note">${t("shortH")}</p><textarea id="sShort" style="min-height:100px">${esc(s.short)}</textarea>
+  <label for="sFull">${t("fuller")}</label><p class="note">${t("fullerH")}</p><textarea id="sFull">${esc(s.fuller)}</textarea>
+  <label for="sPriv">${t("privateL")}</label><p class="note">${t("privateH")}</p><textarea id="sPriv">${esc(s.priv)}</textarea>
+  <label>${t("tags")}</label><div class="row">${tagList.map((g,i)=>`<button class="chip" data-tag="${i}" aria-pressed="${s.tags.includes(i)}">${esc(g)}</button>`).join("")}</div>
+  <p style="margin-top:14px"><button class="primary" data-act="saveStory">${t("saveStory")}</button></p></div>
+  <div class="card"><h3>${t("preview")}</h3><div class="row">${[["s",t("layerS")],["f",t("layerF")]].map(([k,l])=>`<button class="chip" data-layer="${k}" aria-pressed="${layer===k}">${l}</button>`).join("")}</div>
+  <div class="card" style="margin:12px 0 0;background:var(--bg)"><div class="row">${s.tags.map(i=>`<span class="mood" style="margin:0">${esc(tagList[i])}</span>`).join("")}</div>
+  <p class="layer">${esc(s.short)||"<span class='muted'>—</span>"}</p>${layer==="f"&&s.fuller?`<hr style="border:0;border-top:1px solid var(--line)"><p class="layer">${esc(s.fuller)}</p>`:""}</div></div>`;
+}
+let learnTopic=null,openCard=null,openArt=false;
+function cardHTML(c,full){const x=c[lang],saved=store.get("savedCards",{})[c.id];
+  return `<div class="card"><div class="row" style="margin-bottom:6px"><span class="mood" style="margin:0">${esc(TOPICS[lang][c.topic])}</span><span class="note">${c.strong?t("strongEv"):t("earlyEv")}</span></div>
+  <h3 style="margin:4px 0 6px">${esc(x.t)}</h3>${full?`<p>${esc(x.b)}</p><p class="note"><em>${t("source")}: ${esc(c.src)}</em></p>
+  <div class="row"><button class="primary" data-cardwrite="${c.id}">${t("writeAbout")}</button><button class="chip" data-cardsave="${c.id}" aria-pressed="${!!saved}">${saved?t("savedCard"):t("saveCard")}</button></div>`
+  :`<button class="ghost" data-cardopen="${c.id}" style="padding-left:0">${t("read")} →</button>`}</div>`}
+function learnHTML(){
+  if(openArt){const A=ARTICLE;return `<button class="ghost" data-act="artBack">← ${t("back")}</button>
+   <article class="card" style="margin-top:12px"><p class="note">${A.time} ${t("min")}</p><h1>${esc(A.t)}</h1>${lang==="hi"?`<p class="muted">${t("artNoteHi")}</p>`:""}
+   ${A.body.map(([k,v])=>k==="p"?`<p>${esc(v)}</p>`:k==="h"?`<h3 style="margin-top:18px">${esc(v)}</h3>`:k==="ul"?`<ul style="padding-left:20px">${v.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>`:`<figure style="margin:14px 0">${ARTICLE_FIG}</figure>`).join("")}
+   <button class="primary" data-act="artWrite">${t("writeAbout")}</button>
+   <h3 style="margin-top:18px">${t("sourcesH")}</h3><ul class="note" style="padding-left:20px">${A.src.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></article>`}
+  const day=CARDS[new Date().getDate()%CARDS.length];
+  const list=CARDS.filter(c=>!learnTopic||c.topic===learnTopic);
+  return `<h1>${t("learnH")}</h1><p class="muted">${t("learnP")}</p>
+  <p class="note" style="margin:14px 0 6px">${t("todayCard")}</p>${cardHTML(day,true)}
+  <h2 style="margin-top:22px">${t("articles")}</h2><button class="card entry" data-act="artOpen"><small>${ARTICLE.time} ${t("min")}</small><strong>${esc(ARTICLE.t)}</strong></button>
+  <h2 style="margin-top:22px">${t("learn")}</h2><div class="row" style="margin-bottom:12px"><button class="chip" data-ltopic="" aria-pressed="${!learnTopic}">${t("allTopics")}</button>${Object.keys(TOPICS.en).map(k=>`<button class="chip" data-ltopic="${k}" aria-pressed="${learnTopic===k}">${esc(TOPICS[lang][k])}</button>`).join("")}</div>
+  ${list.map(c=>cardHTML(c,openCard===c.id)).join("")}
+  <h2 style="margin-top:22px">${t("books")}</h2><p class="note">${t("bookNote")}</p>
+  ${BOOKS.map(b=>`<div class="card"><strong>${esc(b.t)}</strong><br><span class="note">${esc(b.a)}</span><p style="margin:6px 0 0">${esc(b[lang])}</p></div>`).join("")}`}
+function suggestFor(text,mood){if(!store.get("learnSuggest",true)||CRISIS.test(text)||mood===0)return null;return CARDS.find(c=>c.match.test(text))||null}
+function supportHTML(){const wl=store.get("waitlist",{}),th=store.get("circleTheme",null),city=store.get("city","");
+  const wbtn=k=>wl[k]?`<button class="chip" disabled>${t("onList")}</button>`:`<button class="primary" data-wait="${k}">${t("waitlist")}</button>`;
+  return `<h1>${t("supH")}</h1><p class="muted">${t("supP")}</p>
+  <div class="card"><h2>${t("circH")}</h2><p>${t("circP")}</p><p class="muted">${t("screenP")}</p><label style="margin-top:4px">${t("pickTheme")}</label>
+   <div class="row">${t("themes").map((x,i)=>`<button class="chip" data-theme="${i}" aria-pressed="${th===i}">${esc(x)}</button>`).join("")}</div>
+   <p style="margin-top:14px">${th===null?`<button class="primary" disabled>${t("waitlist")}</button>`:wbtn("circle"+th)}</p></div>
+  <div class="card"><h2>${t("meetH")}</h2><p>${t("meetP")}</p><ul style="padding-left:20px;margin:0 0 12px">${t("meetRules").map(r=>`<li>${esc(r)}</li>`).join("")}</ul>
+   ${city?`<p class="muted">${esc(t("cityOn").replace("{c}",city))}</p>`:`<div class="row"><input id="cityIn" placeholder="${t("cityPh")}" style="flex:1;min-width:140px"><button class="primary" data-act="city">${t("notifyCity")}</button></div>`}</div>
+  <div class="card"><h2>${t("proH")}</h2><p>${t("proP")}</p>
+   ${t("steps").map((st,i)=>`<div style="border-top:1px solid var(--line);padding:12px 0"><div class="row" style="justify-content:space-between"><strong>${i+1}. ${esc(st[0])}</strong><span class="mood" style="margin:0">${esc(st[2])}</span></div><p class="muted" style="margin:4px 0 8px">${esc(st[1])}</p>${wbtn("pro"+i)}</div>`).join("")}</div>
+  <div class="card warn"><p style="margin:0">${t("freeNow")}</p></div>`}
+function ppForm(){const p=store.get("pp",null)||{trig:"",signs:"",dos:[0,1],say:t("ppSayDef"),back:""};
+  openSheet(`<h2>${t("ppH")}</h2><p class="muted">${t("ppIntro")}</p>
+  <label for="ppT">${t("ppTrig")}</label><textarea id="ppT" style="min-height:70px" placeholder="${t("ppTrigPh")}">${esc(p.trig)}</textarea>
+  <label for="ppS">${t("ppSigns")}</label><textarea id="ppS" style="min-height:70px" placeholder="${t("ppSignsPh")}">${esc(p.signs)}</textarea>
+  <label>${t("ppDo")}</label><div class="row">${t("ppDos").map((x,i)=>`<button class="chip" data-ppdo="${i}" aria-pressed="${p.dos.includes(i)}">${x}</button>`).join("")}</div>
+  <label for="ppY">${t("ppSay")}</label><input id="ppY" value="${esc(p.say)}">
+  <label for="ppB">${t("ppBack")}</label><input id="ppB" placeholder="${t("ppBackPh")}" value="${esc(p.back)}">
+  <div class="row" style="margin-top:16px"><button class="primary" data-act="ppSave">${t("ppSave")}</button><button data-act="closeSheet">${t("cancel")}</button></div>`)}
+function ppShow(){const p=store.get("pp",null);if(!p)return ppForm();closeSheet();stopMic();calmTool="pause";calmRunning=false;$("calm").classList.add("open");$("calmDoneBtn").textContent=t("close");stopCalm();
+  const B=$("calmBody");B.onclick=null;const tools=["breathe","ground","watch"];
+  B.innerHTML=`<h2>${t("ppH")}</h2>${p.signs?`<p class="muted">${esc(p.signs)}</p>`:""}<p style="margin:0">${t("ppNow")}</p>
+  <div class="row" style="justify-content:center">${p.dos.map(i=>{const tl=i===1?"breathe":i===2?"ground":null;return tl?`<button class="primary" data-calm="${tl}">${t("ppDos")[i]}</button>`:`<span class="chip" style="border:1px solid var(--line)">${t("ppDos")[i]}</span>`}).join("")}</div>
+  <p style="margin:8px 0 0">${t("ppSayNow")}</p><p class="line" style="min-height:0">“${esc(p.say)}”</p>${p.back?`<p class="muted">${esc(p.back)}</p>`:""}
+  <button class="ghost" data-act="ppEdit">${t("ppEdit")}</button>`;}
+let replyOpen=null,wallTheme=null;
+function wallHTML(){
+  const felt=store.get("felt",{}),myRep=store.get("replies",{}),asks=store.get("asks",{}),groups=store.get("groups",{});
+  const mine=entries().filter(e=>e.share==="wall"&&(!e.tomorrow||Date.now()>=e.shareAt)).map(e=>({id:e.id,text:e.text,want:e.want||0,felt:0,mine:true,replies:[]}));
+  const all=[...mine.reverse(),...SAMPLE_POSTS.map((p,i)=>({...p,id:"s"+i}))];
+  const themesSeen=[...new Set(SAMPLE_POSTS.map(p=>p.theme.en))];
+  const posts=wallTheme===null?all:all.filter(p=>p.theme&&p.theme.en===wallTheme);
+  return `<h1>${t("wall")}</h1><p class="muted">${t("wallIntro")}</p>
+  <div class="row" style="margin-bottom:14px"><button class="chip" data-wtheme="" aria-pressed="${wallTheme===null}">${t("allThemes")}</button>${themesSeen.map(en=>{const p=SAMPLE_POSTS.find(x=>x.theme.en===en);return `<button class="chip" data-wtheme="${esc(en)}" aria-pressed="${wallTheme===en}">${esc(p.theme[lang])}</button>`}).join("")}</div>
+  ${posts.map(p=>{const reps=[...(p.replies||[]),...(myRep[p.id]||[]).map(r=>({...r,me:true}))];const n=p.felt+(felt[p.id]?1:0);
+  return `<div class="card post"><small class="muted">${p.mine?t("you")+" · ":""}${t("want"+p.want)}${p.theme?" · "+esc(p.theme[lang]):""}</small><p>${esc(p.text)}</p>
+  <div class="row"><button class="chip" data-felt="${p.id}" aria-pressed="${!!felt[p.id]}">${t("felt")} · ${n}</button>
+  ${!p.mine&&p.want?`<button class="chip" data-reply="${p.id}" aria-pressed="${replyOpen===p.id}">${t("reply")}${reps.length?" · "+reps.length:""}</button>`:""}
+  ${!p.mine?`<button class="chip" data-ask="${p.id}" ${asks[p.id]?"disabled":""}>${asks[p.id]?t("askSent"):t("askTalk")}</button>`:""}</div>
+  ${felt[p.id]&&p.theme&&!p.mine?`<div class="card" style="margin:12px 0 0;background:var(--teal-bg);border:0"><p style="margin:0 0 8px">${t("sameBoat").replace("{n}",n)}</p>${groups[p.id]?`<p class="muted" style="margin:0">${esc(t("joined").replace("{t}",p.theme[lang]))}</p>`:`<button class="primary" data-group="${p.id}">${esc(t("joinGroup").replace("{t}",p.theme[lang]))}</button>`}</div>`:""}
+  ${!p.mine&&p.want===0?`<p class="note" style="margin-top:10px">${t("noReplies")}</p>`:""}
+  ${reps.length&&p.want?`<div style="margin-top:12px;border-left:3px solid var(--line);padding-left:12px">${reps.map(r=>`<p style="margin:0 0 10px"><small class="muted">${r.me?t("you"):""}${r.been?`${r.me?" · ":""}<span class="mood" style="margin:0">${t("beenTag")}</span>`:""}</small><br>${esc(r.text)}</p>`).join("")}</div>`:""}
+  ${replyOpen===p.id?`<div style="margin-top:12px"><textarea id="repTxt" style="min-height:90px" placeholder="${t("replyPh")}"></textarea>
+   <label class="eyes" style="margin-top:8px"><input type="checkbox" id="repBeen"> ${t("beenThere")}</label><p class="note">${t("replyRule")}</p>
+   <button class="primary" data-sendreply="${p.id}">${t("send")}</button></div>`:""}
+  </div>`}).join("")}
+  <p class="note">${t("sample")} ${t("protoWall")}</p>`;
+}
+function favs(){return store.get("favs",["breathe","ground","watch"])}
+function calmToolsHTML(){const on=store.get("eyes",false);return `<p class="note" style="margin:0 0 6px">${t("goTo")}</p><div class="calmtools">${favs().map(k=>`<button data-calm="${k}">${esc(EX[k][lang].n)}</button>`).join("")}</div>
+  <p style="margin:8px 0 0"><button class="ghost" data-act="exLib" style="padding-left:0">${t("moreEx")} →</button></p>
+  <label class="eyes"><input type="checkbox" data-eyes ${on?"checked":""}> ${t("eyesL")}</label>${on?`<p class="note">${t("eyesWarn")}</p>`:""}`}
+let actx=null;
+function tone(f1,f2,dur){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();
+  const o=actx.createOscillator(),g=actx.createGain(),n=actx.currentTime;o.type="sine";o.frequency.setValueAtTime(f1,n);o.frequency.linearRampToValueAtTime(f2,n+dur);
+  g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(.06,n+.6);g.gain.setValueAtTime(.06,n+dur-.8);g.gain.linearRampToValueAtTime(0,n+dur);o.connect(g);g.connect(actx.destination);o.start(n);o.stop(n+dur)}catch(e){}}
+function say(text){if(!store.get("eyes",false))return false;if(!tts)return false;
+  tts.speak(text,{voice:"airy",rate:.85,language:lang==="hi"?"hi":"en"}).catch(()=>{});return true}
+function voiceOn(){return store.get("eyes",false)}
+let sceneRAF=0;
+function startScene(force){cancelAnimationFrame(sceneRAF);const cv=$("wcv");if(!cv)return;const ctx=cv.getContext("2d");
+  const probe=document.createElement("span");$("calm").appendChild(probe);const col=k=>{probe.style.color=`var(${k})`;return getComputedStyle(probe).color};
+  const hex=(h,a)=>{const c=document.createElement("canvas").getContext("2d");c.fillStyle=h;const v=c.fillStyle;if(v.startsWith("#")){const n=parseInt(v.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`}return v.replace(")",`,${a})`).replace("rgb(","rgba(")};
+  const C=[col("--glow1"),col("--glow2"),col("--glow3"),col("--teal")];const bg=col("--bg");probe.remove();
+  const slow=matchMedia("(prefers-reduced-motion: reduce)").matches?.3:1;const mode=force||store.get("vis","aurora");const leafs=Array.from({length:9},(_,i)=>({x:Math.random(),y:.3+Math.random()*.5,s:.6+Math.random()*.6,v:.012+Math.random()*.012,r:Math.random()*6}));
+  let W=0,H=0;const size=()=>{const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0)};size();
+  const drops=Array.from({length:38},()=>({x:Math.random(),y:Math.random(),r:1.5+Math.random()*4,v:.02+Math.random()*.05,trail:[]}));
+  const t0=performance.now();
+  const frame=now=>{const t=(now-t0)/1000*slow;if(cv.clientWidth!==W)size();ctx.clearRect(0,0,W,H);ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    if(mode==="aurora"){ctx.globalCompositeOperation="source-over";
+      for(let k=0;k<4;k++){const base=H*(.32+k*.1),amp=H*(.08+.03*k),c=C[k%3];
+        for(let pass=0;pass<3;pass++){ctx.beginPath();for(let x=0;x<=W;x+=6){const y=base+Math.sin(x/W*3.2+t*.25+k*1.7)*amp+Math.sin(x/W*7.1-t*.17+k)*amp*.35;x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+          ctx.strokeStyle=hex(c,[.10,.18,.5][pass]);ctx.lineWidth=[46,22,3][pass]*(1+.15*Math.sin(t*.4+k));ctx.lineCap="round";ctx.stroke()}
+        for(let x=0;x<=W;x+=4){const y=base+Math.sin(x/W*3.2+t*.25+k*1.7)*amp+Math.sin(x/W*7.1-t*.17+k)*amp*.35;const g=ctx.createLinearGradient(0,y-H*.28,0,y);g.addColorStop(0,hex(c,0));g.addColorStop(1,hex(c,.07));ctx.fillStyle=g;ctx.fillRect(x,y-H*.28,4,H*.28)}}}
+    if(mode==="tide"){for(let k=0;k<5;k++){const base=H*(.35+k*.13),amp=8+k*4,c=C[k%4];ctx.beginPath();ctx.moveTo(0,H);
+        for(let x=0;x<=W;x+=5)ctx.lineTo(x,base+Math.sin(x/W*Math.PI*2*(1+k*.3)+t*(.35-k*.04)+k)*amp+Math.sin(x/90-t*.5)*3);
+        ctx.lineTo(W,H);ctx.closePath();ctx.fillStyle=hex(c,.28+k*.06);ctx.fill()}}
+    if(mode==="rain"){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,hex(C[1],.35));g.addColorStop(1,hex(C[0],.35));ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+      drops.forEach(d=>{const sp=d.r>4?d.v*3:d.v*.4;d.y+=sp*.016*slow*(1+Math.sin(t+d.x*9)*.3);d.trail.push([d.x*W,d.y*H]);if(d.trail.length>40)d.trail.shift();
+        if(d.y>1.05){d.y=-.05;d.x=Math.random();d.trail=[]}
+        ctx.strokeStyle=hex("#ffffff",.35);ctx.lineWidth=d.r*.9;ctx.beginPath();d.trail.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();
+        ctx.beginPath();ctx.arc(d.x*W,d.y*H,d.r,0,7);ctx.fillStyle=hex("#ffffff",.55);ctx.fill();ctx.strokeStyle=hex(C[3],.35);ctx.lineWidth=1;ctx.stroke()})}
+    if(mode==="drift"){for(let k=0;k<5;k++){const x=W*(.5+.36*Math.sin(t*.13*(1+k*.21)+k*2)),y=H*(.5+.34*Math.cos(t*.11*(1+k*.17)+k)),r=Math.min(W,H)*(.16+.05*Math.sin(t*.3+k));
+        const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,hex(C[k%3],.8));g.addColorStop(1,hex(C[k%3],0));ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill()}}
+    if(mode==="leaves"){for(let k=0;k<4;k++){ctx.beginPath();ctx.moveTo(0,H);for(let x=0;x<=W;x+=6)ctx.lineTo(x,H*(.2+k*.2)+Math.sin(x/W*6+t*.4+k)*6);ctx.lineTo(W,H);ctx.closePath();ctx.fillStyle=hex(C[k%2],.16+k*.05);ctx.fill()}
+      leafs.forEach(l=>{l.x+=l.v*.016*slow*3;if(l.x>1.1){l.x=-.1;l.y=.3+Math.random()*.5}const x=l.x*W,y=l.y*H+Math.sin(t*.8+l.r)*5;
+        ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(t*.5+l.r)*.5);ctx.scale(l.s,l.s);ctx.beginPath();ctx.ellipse(0,0,16,7,0,0,7);ctx.fillStyle=hex(C[2],.85);ctx.fill();
+        ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(14,0);ctx.strokeStyle=hex(C[3],.45);ctx.lineWidth=1;ctx.stroke();ctx.restore()})}
+    sceneRAF=requestAnimationFrame(frame)};
+  sceneRAF=requestAnimationFrame(frame)}
+let calmTimer=null,calmTool=null,groundNext=null,countNext=null;
+function vib(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}}
+function stopCalm(){clearTimeout(calmTimer);clearInterval(calmTimer);calmTimer=null;cancelAnimationFrame(sceneRAF);sceneRAF=0;if(tts)try{tts.stop()}catch(e){}}
+function openCalm(tool){closeSheet();stopMic();calmTool=tool;$("calm").classList.add("open");$("calmDoneBtn").textContent=t("done");
+  const B=$("calmBody");stopCalm();calmRunning=true;B.onclick=null;const E=EX[tool]&&EX[tool][lang];
+  if(tool==="box")return breathPattern(B,[[t("inhale"),4,1,220,330],[t("holdB"),4,1],[t("exhale"),4,.55,330,220],[t("holdB"),4,.55]]);
+  if(tool==="sigh")return breathPattern(B,[[t("sighIn1"),2.5,.85,220,300],[t("sighIn2"),1,1,300,340],[t("sighOut"),6,.55,340,200],[t("restB"),3,.55]]);
+  if(E&&E.steps)return runSteps(B,E.steps,EX[tool].scene);
+  if(tool==="butterfly"){B.innerHTML=`<p style="max-width:340px">${esc(t("bflyP"))}</p><div class="row" style="gap:40px;justify-content:center"><div id="bl" class="bub" style="width:90px;height:90px;transform:scale(.6);transition:transform .5s"></div><div id="br" class="bub" style="width:90px;height:90px;transform:scale(.6);transition:transform .5s"></div></div>`;eyesCtl(B);
+    if(voiceOn())say(t("bflyP"));let n=0;calmTimer=setInterval(()=>{const L=n%2===0;$("bl").style.transform=`scale(${L?1:.6})`;$("br").style.transform=`scale(${L?.6:1})`;vib(20);if(voiceOn()&&!tts)tone(L?330:262,L?330:262,.4);if(++n>90)afterCheck()},1100);return}
+  if(tool==="count"){let n=100;const draw=()=>{B.innerHTML=`<p style="max-width:320px">${t("countP")}</p><div class="big" style="font-size:72px;font-family:Literata,serif;color:var(--teal)">${n}</div><button class="primary" data-act="countNext">${t("countNext")}</button>`};
+    countNext=()=>{n-=7;vib(15);if(n<10)return afterCheck();draw()};draw();if(voiceOn())say(t("countP"));return}
+  if(tool==="worry"){B.innerHTML=`<p style="max-width:340px">${t("worryP")}</p><textarea id="wTxt" style="max-width:380px;min-height:140px" placeholder="${t("worryPh")}"></textarea>
+    <p style="margin:0">${t("worryWhen")}</p><div class="row" style="justify-content:center">${t("worryTimes").map((x,i)=>`<button class="chip" data-wtime="${i}" aria-pressed="${i===0}">${x}</button>`).join("")}</div><button class="primary" data-act="worrySave">${t("worrySave")}</button>`;return}
+  if(tool==="breathe"){B.innerHTML=`<div class="bub" id="bub"></div><h2 id="bt">${t("inhale")}</h2>`;
+    const bub=$("bub"),bt=$("bt");let inP=true;
+    if(voiceOn()){B.insertAdjacentHTML("beforeend",`<p class="vnote">${tts?t("eyesOn"):t("toneNote")}</p><button class="ghost" data-act="eyesStop">${t("eyesOff")}</button>`)}
+    const step=()=>{bub.style.transitionDuration=(inP?4:6)+"s";bub.style.transform=inP?"scale(1)":"scale(.55)";bt.textContent=inP?t("inhale"):t("exhale");vib(inP?40:20);
+      if(voiceOn()&&!say(t("breatheV")[inP?0:1]))tone(inP?220:330,inP?330:220,inP?4:6);const d=inP?4000:6000;inP=!inP;calmTimer=setTimeout(step,d)};
+    calmTimer=setTimeout(step,300);}
+  if(tool==="ground"&&voiceOn()){let lvl=5;
+    const go=()=>{if(!lvl){B.onclick=null;return afterCheck()}B.innerHTML=`<h2>${t("ec"+lvl)}</h2><button data-act="gNext">${t("next")}</button>${tts?"":`<p class="vnote">${t("toneNote")}</p>`}<button class="ghost" data-act="eyesStop">${t("eyesOff")}</button>`;
+      if(!say(t("ec"+lvl)))tone(392,392,1.5);const l=lvl;lvl--;clearTimeout(calmTimer);calmTimer=setTimeout(go,l===3?24000:18000)};
+    groundNext=go;go();tool="_";}
+  if(tool==="ground"){let lvl=5,got=0;
+    const draw=()=>{B.innerHTML=`<h2>${t("g"+lvl)}</h2><p class="muted">${t("gTap")}</p><div class="stars">${Array.from({length:lvl},(_,i)=>`<button data-star="${i}" aria-pressed="${i<got}" aria-label="${i+1}">${i<got?"✓":""}</button>`).join("")}</div>`};
+    B.onclick=ev=>{const b=ev.target.closest("[data-star]");if(!b||b.getAttribute("aria-pressed")==="true")return;got++;vib(15);if(got>=lvl){lvl--;got=0;if(!lvl){B.onclick=null;return afterCheck()}}draw()};draw();}
+  else B.onclick=null;
+  if(tool==="watch"){const L=t("watchLines");let i=0;B.innerHTML=`<canvas id="wcv" aria-hidden="true"></canvas><p class="line" id="wl">${esc(L[0])}</p>
+    <label class="scene note">Scene <select id="sceneSel">${["aurora","tide","rain","drift"].map(v=>`<option value="${v}" ${v===store.get("vis","aurora")?"selected":""}>${{aurora:"Aurora",tide:"Slow tide",rain:"Rain on glass",drift:"Drifting lights"}[v]}</option>`).join("")}</select></label>`;
+    startScene();
+    if(voiceOn()){say(L[0]);B.insertAdjacentHTML("beforeend",`<button class="ghost" data-act="eyesStop">${t("eyesOff")}</button>`)}
+    calmTimer=setInterval(()=>{const el=$("wl");if(!el)return;el.style.opacity=0;setTimeout(()=>{i=(i+1)%L.length;el.textContent=L[i];el.style.opacity=1;if(voiceOn())say(L[i])},1200)},voiceOn()?10000:7000);}
+}
+function afterCheck(){stopCalm();const B=$("calmBody");B.onclick=null;$("calmDoneBtn").textContent=t("close");
+  calmRunning=false;const k=calmTool,fav=EX[k]&&favs().includes(k);
+  B.innerHTML=`<h2>${t("afterQ")}</h2><div class="row" style="justify-content:center">${t("after").map((a,i)=>`<button class="chip" data-after="${i}">${a}</button>`).join("")}</div><div id="afterMsg"></div>
+  ${EX[k]?`<button class="chip" data-fav="${k}" aria-pressed="${fav}">${fav?"★ "+t("inGoTo"):"☆ "+t("addGoTo")}</button>`:""}`;}
+function closeCalm(){stopCalm();calmRunning=false;$("calm").classList.remove("open");calmTool=null;render()}
+function exLibSheet(){const f=favs();openSheet(`<h2>${t("exLibH")}</h2><p class="muted">${t("exLibP")}</p>
+  ${Object.keys(EX_CATS.en).map(c=>`<h3 style="margin-top:16px">${EX_CATS[lang][c]}</h3>${Object.keys(EX).filter(k=>EX[k].cat===c).map(k=>`<div class="card" style="margin-bottom:8px;padding:12px 14px">
+   <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><strong>${esc(EX[k][lang].n)}</strong><button class="chip" data-fav="${k}" aria-pressed="${f.includes(k)}" aria-label="${t("addGoTo")}">${f.includes(k)?"★":"☆"}</button></div>
+   <p class="muted" style="margin:2px 0 8px">${esc(EX[k][lang].d)}</p><button data-calm="${k}">${t("tryEx")}</button></div>`).join("")}`).join("")}
+  <p style="margin-top:14px"><button class="primary" data-act="closeSheet">${t("close")}</button></p>`)}
+function toggleFav(k){let f=favs();f=f.includes(k)?f.filter(x=>x!==k):[...f,k];if(!f.length)f=["breathe"];store.set("favs",f)}
+let calmRunning=false;
+function eyesCtl(B){if(voiceOn())B.insertAdjacentHTML("beforeend",`${tts?"":`<p class="vnote">${t("toneNote")}</p>`}<button class="ghost" data-act="eyesStop">${t("eyesOff")}</button>`)}
+function breathPattern(B,seq){B.innerHTML=`<div class="bub" id="bub"></div><h2 id="bt"></h2>`;eyesCtl(B);const bub=$("bub"),bt=$("bt");let i=0;
+  const step=()=>{const [lab,sec,sc,f1,f2]=seq[i%seq.length];bub.style.transitionDuration=sec+"s";bub.style.transform=`scale(${sc})`;bt.textContent=lab;vib(25);
+    if(voiceOn()&&!say(lab))if(f1)tone(f1,f2,sec);i++;calmTimer=setTimeout(step,sec*1000)};calmTimer=setTimeout(step,300)}
+function runSteps(B,steps,scene){let i=0;
+  const go=()=>{clearTimeout(calmTimer);if(i>=steps.length)return afterCheck();const [txt,sec]=steps[i];
+    B.innerHTML=`${scene?`<canvas id="wcv" aria-hidden="true" style="height:min(32vh,260px)"></canvas>`:`<div class="bub" style="width:150px;height:150px;transform:scale(.8);animation:breathe 8s ease-in-out infinite"></div>`}<h2 class="line" style="min-height:0">${esc(txt)}</h2><p class="note">${i+1} / ${steps.length}</p><button data-act="stepNext">${t("next")}</button>`;
+    eyesCtl(B);if(scene)startScene(scene);if(voiceOn()&&!say(txt))tone(392,392,1.2);i++;calmTimer=setTimeout(go,sec*1000*(voiceOn()?1.3:1))};
+  stepNext=go;go()}
+let stepNext=null;
+function openSheet(html){$("sheetBody").innerHTML=html;$("sheet").classList.add("open")}
+function closeSheet(){$("sheet").classList.remove("open")}
+function crisisSheet(){openSheet(`<h2>${t("calmH")}</h2><p class="muted">${t("calmP")}</p>${store.get("pp",null)?`<p><button class="primary" data-act="pp">${t("ppOpen")}</button></p>`:""}${calmToolsHTML()}<h2 style="margin-top:24px">${t("crisisH")}</h2><p>${t("crisisP")}</p>
+  <div class="card"><div class="big"><a href="tel:14416" style="color:inherit">14416</a></div><p class="muted">${t("tele")}</p><button data-act="copyNum">${t("copyNum")}</button></div>
+  <div class="card"><div class="big"><a href="tel:112" style="color:inherit">112</a></div></div>
+  <p>${t("trustP")}</p><button class="primary" data-act="closeSheet">${t("close")}</button>`)}
+function gentleSheet(){openSheet(`<h2>${t("gentleH")}</h2><p>${t("gentleP")}</p><div class="row"><button class="primary" data-act="talk">${t("talk")}</button><button data-act="closeSheet">${t("notNow")}</button></div>`)}
+function settingsSheet(){const pin=store.get("pin",null);
+  openSheet(`<h2>${t("setH")}</h2><label>${t("lang")}</label><div class="row"><button class="chip" data-setlang="en" aria-pressed="${lang==="en"}">English</button><button class="chip" data-setlang="hi" aria-pressed="${lang==="hi"}">हिंदी</button></div>
+  <label for="newPin">${pin?t("pinOn"):t("pinSet")}</label>${pin?`<button data-act="pinOff">${t("pinOff")}</button>`:`<div class="row"><input id="newPin" inputmode="numeric" maxlength="4" type="password" style="max-width:140px"><button data-act="pinSave">${t("pinSave")}</button></div>`}
+  <label class="eyes" style="margin-top:18px"><input type="checkbox" data-learnsug ${store.get("learnSuggest",true)?"checked":""}> ${t("suggestSet")}</label><p class="note">${t("suggestSetP")}</p>
+  <p style="margin-top:20px"><button data-act="clear" style="color:var(--coral)">${t("clear")}</button></p><p class="note">${t("aboutP")}</p>
+  <button class="primary" data-act="closeSheet">${t("close")}</button>`)}
+
+async function reflect(id){
+  const box=$("refl");const all=entries();const x=all.find(e=>e.id===id);
+  if(!REFLECT_URL){box.innerHTML=`<p class="muted">${t("reflectOff")}</p>`;return}
+  box.innerHTML=`<p class="muted">${t("reflecting")}</p>`;
+  const recent=all.filter(e=>e.id!==id).slice(-3).map(e=>"- "+e.text.slice(0,300)).join("\n")||"(none)";
+  const replyLang=/[ऀ-ॿ]/.test(x.text)||lang==="hi"?"Hindi (Devanagari script)":"English";
+  try{
+    const resp=await fetch(REFLECT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({entry:x.text.slice(0,4000),prompt:x.prompt||"",recent,lang:replyLang})});
+    if(resp.status===429){box.innerHTML=`<p class="muted">${t("reflectLimit")}</p>`;return}
+    if(!resp.ok)throw new Error("bad");const res=await resp.json();
+    let r;try{const m=res.text.match(/\{[\s\S]*\}/);r=JSON.parse(m[0]);if(!r.hear)throw 0}catch(e){r={raw:res.text}}
+    const list=entries();const e=list.find(e=>e.id===id);e.reflection=r;saveEntries(list);
+    if(view&&view.id===id)render();
+  }catch(err){
+    box.innerHTML=`<p class="muted">${t("reflectErr")}</p><button class="primary" data-act="reflect">${t("reflectBtn")}</button>`;
+  }
+}
+function micUI(){const b=$("micBtn");if(!b)return;b.setAttribute("aria-pressed",micOn);b.setAttribute("aria-label",micOn?t("stopTalk"):t("micLabel"));$("micState").textContent=micOn?t("listening"):t("micHint");if(!micOn)$("partial").textContent=""}
+function startMic(){
+  if(!dict){const s=$("micState");if(s)s.textContent=t("voiceOff");return}
+  (view||comp).voice=true;
+  dict.start().then(()=>{}).catch(err=>{micOn=false;micUI();const s=$("micState");if(s)s.textContent=err&&err.code==="not_granted"?t("voiceOff"):""});
+  micOn=true;micUI();
+}
+function stopMic(){if(micOn&&dict){dict.stop().catch(()=>{})}micOn=false;micUI()}
+function speakRefl(){const sb=$("spkBtn");if(sb&&sb.textContent===t("stopListen")){try{tts.stop()}catch(e){}return}
+  const x=entries().find(e=>e.id===view.id);if(!x||!x.reflection||!tts)return;
+  const r=x.reflection;const txt=r.raw||[r.hear,r.angle,r.yourPart,r.step].filter(Boolean).join("\n\n");
+  tts.speak(txt.slice(0,2000),{voice:"airy",rate:.95,...(lang==="hi"||/[\u0900-\u097F]/.test(txt)?{language:"hi"}:{language:"en"})}).catch(()=>{})}
+function update(id,fn){const l=entries();const e=l.find(e=>e.id===id);if(e){fn(e);saveEntries(l)}}
+
+document.addEventListener("click",ev=>{
+  const b=ev.target.closest("button");if(!b)return;const d=b.dataset;
+  if(b.id==="helpBtn")return crisisSheet();
+  if(d.calm)return openCalm(d.calm);
+  if(d.fav){toggleFav(d.fav);if($("sheet").classList.contains("open"))return exLibSheet();const f=favs().includes(d.fav);b.setAttribute("aria-pressed",f);b.textContent=f?"★ "+t("inGoTo"):"☆ "+t("addGoTo");return}
+  if(d.wtime!==undefined){document.querySelectorAll("[data-wtime]").forEach(x=>x.setAttribute("aria-pressed",x===b));return}
+  if(d.sym!==undefined){const k=new Date().toDateString(),bl=store.get("body",{});const cur=bl[k]||[];const i=+d.sym;bl[k]=cur.includes(i)?cur.filter(x=>x!==i):[...cur,i];store.set("body",bl);return render()}
+  if(d.after!==undefined){const l=store.get("calmLog",[]);l.push({ts:Date.now(),tool:calmTool,after:+d.after});store.set("calmLog",l);
+    document.querySelectorAll("[data-after]").forEach(x=>x.setAttribute("aria-pressed",x===b));
+    $("afterMsg").innerHTML=+d.after===2?`<p>${t("afterWorse")}</p><div class="card"><div class="big"><a href="tel:14416" style="color:inherit">14416</a></div><p class="muted">${t("tele")}</p></div>`:`<p>${t("afterThanks")}</p>`;return}
+  if(b.id==="setBtn")return settingsSheet();
+  if(b.id==="langBtn"){lang=lang==="en"?"hi":"en";store.set("lang",lang);return render()}
+  if(d.tab){stopMic();if(!view&&tab==="today"&&$("txt"))comp.draft=$("txt").value;tab=d.tab;view=null;return render()}
+  if(d.mood){if($("txt"))comp.draft=$("txt").value;store.set("todayMood",{i:+d.mood,d:new Date().toDateString()});return render()}
+  if(d.open){view={type:"entry",id:d.open};return render()}
+  if(d.promptPick!==undefined){const i=+d.promptPick;view.draft=$("txt").value;view.prompt=i?PROMPTS[lang][i-1]:"";return render()}
+  if(d.emood){view.draft=$("txt").value;view.mood=+d.emood;return render()}
+  if(d.share){view.shareSel=d.share;return render()}
+  if(d.want){view.want=+d.want;const c=$("tmr");if(c)view.tomorrow=c.checked;return render()}
+  if(d.tag){const s=saveStoryFields();const i=+d.tag;s.tags=s.tags.includes(i)?s.tags.filter(x=>x!==i):[...s.tags,i];store.set("story",s);return render()}
+  if(d.layer){saveStoryFields();store.set("layer",d.layer);view=null;return render()}
+  if(d.ltopic!==undefined){learnTopic=d.ltopic||null;return render()}
+  if(d.cardopen){openCard=openCard===d.cardopen?null:d.cardopen;return render()}
+  if(d.cardsave){const sv=store.get("savedCards",{});sv[d.cardsave]=!sv[d.cardsave];store.set("savedCards",sv);return render()}
+  if(d.cardwrite){const c=CARDS.find(c=>c.id===d.cardwrite);view={type:"new",prompt:c[lang].p,mood:null};return render()}
+  if(d.suggopen){tab="learn";openCard=d.suggopen;learnTopic=null;openArt=false;view=null;render();const el=document.querySelector(`[data-cardwrite="${d.suggopen}"]`);if(el)el.scrollIntoView({block:"center"});return}
+  if(d.theme){store.set("circleTheme",+d.theme);return render()}
+  if(d.wait){const w=store.get("waitlist",{});w[d.wait]=true;store.set("waitlist",w);return render()}
+  if(d.reply){replyOpen=replyOpen===d.reply?null:d.reply;render();const r=$("repTxt");if(r)r.focus();return}
+  if(d.sendreply){const txt=$("repTxt").value.trim();if(!txt)return;
+    if(/(\d[\s-]?){7,}|https?:|www\.|@\w{2,}|instagram|insta |snapchat|whatsapp/i.test(txt))return toast(t("blocked"));
+    if(CRISIS.test(txt)){gentleSheet()}
+    const r=store.get("replies",{});(r[d.sendreply]=r[d.sendreply]||[]).push({text:txt,been:$("repBeen").checked});store.set("replies",r);replyOpen=null;return render()}
+  if(d.ask){return openSheet(`<h2>${t("askH")}</h2><p>${t("askP")}</p><div class="row"><button class="primary" data-asksend="${d.ask}">${t("askSend")}</button><button data-act="closeSheet">${t("cancel")}</button></div><p class="note" style="margin-top:12px">${t("protoWall")}</p>`)}
+  if(d.asksend){const a=store.get("asks",{});a[d.asksend]=true;store.set("asks",a);closeSheet();return render()}
+  if(d.group){const g=store.get("groups",{});g[d.group]=true;store.set("groups",g);return render()}
+  if(d.ppdo!==undefined){b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true");return}
+  if(d.wtheme!==undefined){wallTheme=d.wtheme===""?null:d.wtheme;return render()}
+  if(d.felt){const f=store.get("felt",{});f[d.felt]=!f[d.felt];store.set("felt",f);return render()}
+  if(d.setlang){lang=d.setlang;store.set("lang",lang);render();return settingsSheet()}
+  const a=d.act;if(!a)return;
+  if(a==="new"){stopMic();view={type:"new",prompt:d.prompt||"",mood:null};return render()}
+  if(a==="newTalk"){view={type:"new",prompt:"",mood:null};render();return startMic()}
+  if(a==="mic"){return micOn?stopMic():startMic()}
+  if(a==="listen"){return speakRefl()}
+  if(a==="back"){stopMic();if(tts)try{tts.stop()}catch(e){}const wasEntry=view&&view.type==="entry";view=null;if(wasEntry)tab="journal";return render()}
+  if(a==="save"){stopMic();const text=$("txt").value.trim();if(!text)return $("txt").focus();
+    const tm=store.get("todayMood",null);
+    const src=view||{prompt:todayPromptText(),mood:tm&&tm.d===new Date().toDateString()?tm.i:null,voice:comp.voice};
+    const e={id:Date.now().toString(36),ts:Date.now(),text,prompt:src.prompt,mood:src.mood,share:"private",voice:!!src.voice};
+    if(!view)comp={draft:"",voice:false};
+    const sg=suggestFor(text,e.mood);if(sg)e.suggest=sg.id;const l=entries();l.push(e);saveEntries(l);view={type:"entry",id:e.id};render();if(CRISIS.test(text))gentleSheet();return}
+  if(a==="reflect")return reflect(view.id);
+  if(a==="share"){const c=$("tmr");const tm=c?c.checked:false;const sel=view.shareSel;
+    update(view.id,e=>{e.share=sel;e.want=view.want??e.want??0;e.tomorrow=sel==="wall"&&tm;const n=new Date();n.setDate(n.getDate()+1);n.setHours(9,0,0,0);e.shareAt=n.getTime()});
+    view.shareSel=null;render();return toast(sel==="wall"?(tm?t("scheduled"):t("shared")):t("circleNote"))}
+  if(a==="unshare"){update(view.id,e=>{e.share="private";e.tomorrow=false});view.shareSel="private";return render()}
+  if(a==="copy"){const x=entries().find(e=>e.id===view.id);navigator.clipboard.writeText(x.text).then(()=>toast(t("copied"))).catch(()=>toast("—"));return}
+  if(a==="delete"){saveEntries(entries().filter(e=>e.id!==view.id));view=null;tab="journal";return render()}
+  if(a==="saveStory"){saveStoryFields();return toast(t("saved"))}
+  if(a==="closeSheet")return closeSheet();
+  if(a==="artOpen"){openArt=true;return render()}
+  if(a==="artBack"){openArt=false;return render()}
+  if(a==="artWrite"){view={type:"new",prompt:lang==="hi"?"जो बात अब भी भारी लगती है, उसके बारे में 15 मिनट लिखिए: क्या हुआ, कैसा लगा, और अब इसका आपके लिए क्या मतलब है।":"Write for 15 minutes about something that still weighs on you: what happened, how it felt, and what it means to you now.",mood:null};openArt=false;return render()}
+  if(a==="suggOff"){update(view.id,e=>{e.suggest=null});return render()}
+  if(a==="pp")return ppShow();
+  if(a==="ppEdit"){closeCalm();return ppForm()}
+  if(a==="ppSave"){const dos=[...document.querySelectorAll("[data-ppdo][aria-pressed=true]")].map(x=>+x.dataset.ppdo);
+    store.set("pp",{trig:$("ppT").value.trim(),signs:$("ppS").value.trim(),dos,say:$("ppY").value.trim()||t("ppSayDef"),back:$("ppB").value.trim()});closeSheet();render();return toast(t("saved"))}
+  if(a==="city"){const c=$("cityIn").value.trim();if(c){store.set("city",c);render()}return}
+  if(a==="eyesStop"){store.set("eyes",false);if(tts)try{tts.stop()}catch(e){}b.remove();document.querySelectorAll(".vnote").forEach(x=>x.remove());return}
+  if(a==="gNext"){clearTimeout(calmTimer);if(groundNext)groundNext();return}
+  if(a==="calmDone"){if(calmRunning)return afterCheck();return closeCalm()}
+  if(a==="stepNext"){if(stepNext)stepNext();return}
+  if(a==="countNext"){if(countNext)countNext();return}
+  if(a==="worrySave"){const tx=$("wTxt").value.trim();if(!tx)return $("wTxt").focus();const wi=[...document.querySelectorAll("[data-wtime]")].findIndex(x=>x.getAttribute("aria-pressed")==="true");
+    const l=entries();l.push({id:Date.now().toString(36),ts:Date.now(),text:tx+"\n\n— "+t("worryTimes")[Math.max(0,wi)],prompt:t("worryPrompt"),mood:null,share:"private"});saveEntries(l);toast(t("worrySaved"));return afterCheck()}
+  if(a==="exLib")return exLibSheet();
+  if(a==="docSum")return docSummary();
+  if(a==="sumCopy"){navigator.clipboard.writeText($("sumTxt").value+($("sumNotes").value.trim()?"\n\n"+$("sumNotes").value.trim():"")).then(()=>toast(t("copied"))).catch(()=>{});return}
+  if(a==="talk")return crisisSheet();
+  if(a==="copyNum"){navigator.clipboard.writeText("14416").then(()=>toast("14416")).catch(()=>{});return}
+  if(a==="pinSave"){const v=$("newPin").value;if(/^\d{4}$/.test(v)){store.set("pin",v);settingsSheet()}return}
+  if(a==="pinOff"){store.set("pin",null);return settingsSheet()}
+  if(a==="clear"){store.clear();lang="en";view=null;tab="today";closeSheet();return render()}
+});
+document.addEventListener("change",ev=>{if(ev.target.matches("[data-learnsug]")){store.set("learnSuggest",ev.target.checked);return}if(ev.target.matches("[data-eyes]")){store.set("eyes",ev.target.checked);if($("sheet").classList.contains("open"))crisisSheet();else render()}});
+$("sheet").addEventListener("click",ev=>{if(ev.target.id==="sheet")closeSheet()});
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){if($("calm").classList.contains("open"))closeCalm();else closeSheet()}});
+function saveStoryFields(){const s=store.get("story",{short:"",fuller:"",priv:"",tags:[]});
+  if($("sShort")){s.short=$("sShort").value;s.fuller=$("sFull").value;s.priv=$("sPriv").value}store.set("story",s);return s}
+$("pinIn").addEventListener("input",ev=>{const v=ev.target.value;if(v.length===4){if(v===store.get("pin",null)){$("lock").classList.remove("open");ev.target.value=""}else{$("pinMsg").textContent=t("pinWrong");ev.target.value=""}}});
+
+function applyPal(){const p=store.get("pal","sunrise");document.documentElement.dataset.pal=p;$("palSel").value=p;$("visSel").value=store.get("vis","aurora")}
+$("palSel").addEventListener("change",e=>{store.set("pal",e.target.value);applyPal()});
+$("visSel").addEventListener("change",e=>{store.set("vis",e.target.value)});
+document.addEventListener("change",e=>{if(e.target.id==="sceneSel"){store.set("vis",e.target.value);$("visSel").value=e.target.value;startScene()}});
+applyPal();
+if(!store.get("welcomed",false))$("welcome").classList.add("open");
+$("welcomeOk").addEventListener("click",()=>{store.set("welcomed",true);$("welcome").classList.remove("open")});
+if(store.get("pin",null)){$("lock").classList.add("open");setTimeout(()=>$("pinIn").focus(),50)}
+render();
+/* Browser speech: dictation and read-aloud */
+(function(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SR){let rec=null,cbP=()=>{},cbF=()=>{},cbS=()=>{};
+    dict={onPartial:f=>cbP=f,onFinal:f=>cbF=f,onState:f=>cbS=f,
+      start(){return new Promise((res,rej)=>{try{rec=new SR();rec.lang=lang==="hi"?"hi-IN":"en-IN";rec.interimResults=true;rec.continuous=true;
+        rec.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)cbF({text:r[0].transcript});else interim+=r[0].transcript}cbP({text:interim})};
+        rec.onerror=e=>{cbS({state:"idle",reason:e.error});if(e.error==="not-allowed")rej({code:"not_granted"})};
+        rec.onend=()=>cbS({state:"idle",reason:"stopped"});rec.onstart=()=>{cbS({state:"listening"});res()};rec.start()}catch(err){rej(err)}})},
+      stop(){try{rec&&rec.stop()}catch(e){}return Promise.resolve()}};
+    dict.onPartial(({text})=>{const p=$("partial");if(p)p.textContent=text});
+    dict.onFinal(({text})=>{const ta=$("txt");if(ta&&text){ta.value=(ta.value?ta.value.replace(/\s*$/," "):"")+text.trim();(view?view.draft=ta.value:comp.draft=ta.value)}const p=$("partial");if(p)p.textContent=""});
+    dict.onState(({state})=>{micOn=state==="listening";micUI()});}
+  if("speechSynthesis" in window){let cbS=()=>{};
+    tts={onState:f=>cbS=f,stop(){speechSynthesis.cancel();cbS({state:"idle"})},
+      speak(text,o={}){return new Promise((res,rej)=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const L=o.language==="hi"?"hi-IN":"en-IN";u.lang=L;
+        const v=speechSynthesis.getVoices().find(v=>v.lang===L)||speechSynthesis.getVoices().find(v=>v.lang.startsWith(L.slice(0,2)));if(v)u.voice=v;u.rate=o.rate||.95;
+        u.onstart=()=>cbS({state:"speaking"});u.onend=()=>{cbS({state:"idle"});res()};u.onerror=e=>{cbS({state:"idle"});rej({code:e.error})};speechSynthesis.speak(u)})}};
+    tts.onState(({state})=>{const b=$("spkBtn");if(b)b.textContent=state==="speaking"?t("stopListen"):t("listen")});}
+})();
+}
+</script>
+</body>
+</html>
