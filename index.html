@@ -28,6 +28,7 @@
 .protobar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:6px 16px;font-size:13px;background:var(--teal-bg);color:var(--teal)}
 .protobar select,.scene select{font:500 14px Mukta,sans-serif;min-height:34px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:2px 8px}
 #wcv{width:100%;height:min(46vh,380px);display:block;border-radius:20px}
+[hidden]{display:none!important}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Mukta,system-ui,sans-serif;overflow-x:clip}
 h1,h2,h3{font-family:Literata,Mukta,serif;font-weight:600;line-height:1.15;margin:0 0 .4em;text-wrap:balance}
@@ -114,7 +115,7 @@ label{font-weight:600;display:block;margin:14px 0 6px}
 </style>
 </head>
 <body>
-<div class="protobar" role="region" aria-label="Prototype controls"><strong>Test version</strong>
+<div class="protobar" role="region" aria-label="Prototype controls" hidden><strong>Test version</strong>
   <label>Theme <select id="palSel"><option value="sunrise">Sunrise</option><option value="teal">Quiet teal</option><option value="lavender">Lavender dusk</option><option value="garden">Garden</option></select></label>
   <label>Just watch <select id="visSel"><option value="aurora">Aurora</option><option value="tide">Slow tide</option><option value="rain">Rain on glass</option><option value="drift">Drifting lights</option></select></label></div>
 <div class="app">
@@ -147,8 +148,7 @@ label{font-weight:600;display:block;margin:14px 0 6px}
    <li><strong>It's a prototype</strong>, not a replacement for a therapist, doctor or emergency help.</li>
    <li><strong>For adults, 18 and over.</strong></li>
    <li><strong>Your journal stays on this device.</strong> Nothing is collected or stored by us.</li>
-   <li><strong>One exception:</strong> when you tap "Reflect with Aura," that entry is sent to an AI service (Anthropic's Claude) to write the reflection. Aura doesn't save it, and Anthropic doesn't use it to train its models. Don't tap it if you'd rather keep an entry fully offline.</li>
-   <li>Aura's AI can be wrong. It never diagnoses or suggests medicine.</li>
+   <li>Aura never diagnoses or suggests medicine.</li>
   </ul>
   <p class="card warn" style="margin:14px 0">If you're in danger right now, call 112. To talk to a trained counsellor in India, free and any time: Tele-MANAS, 14416 or 1-800-891-4416.</p>
   <button class="primary" id="welcomeOk" style="width:100%">I understand, let me in</button>
@@ -531,10 +531,10 @@ function entryHTML(id){
   ${x.prompt?`<h2 style="margin-top:8px">${esc(x.prompt)}</h2>`:""}<p class="post" style="white-space:pre-wrap">${esc(x.text)}</p></div>
   ${(()=>{const sg=x.suggest&&CARDS.find(c=>c.id===x.suggest);return sg?`<div class="card" style="border-color:var(--teal)"><p class="note" style="margin:0 0 4px">${t("suggestH")}</p><strong>${esc(sg[lang].t)}</strong>
    <div class="row" style="margin-top:8px"><button class="primary" data-suggopen="${sg.id}">${t("read")}</button><button class="ghost" data-act="suggOff">${t("suggestOff")}</button></div></div>`:""})()}
-  <div class="card reflect" id="refl">
+  ${REFLECT_URL?`<div class="card reflect" id="refl">
    ${r?reflHTML(r):`<button class="primary" data-act="reflect">${t("reflectBtn")}</button>`}
    <p class="note" style="margin-top:10px">${t("reflectNote")}</p>
-  </div>
+  </div>`:""}
   <div class="card"><h3>${t("share")}</h3>
    <div class="row">${[["private",t("private")],["wall",t("wallOpt")],["circle",t("circle")],["trusted",t("trusted")]].map(([k,l])=>`<button class="chip" data-share="${k}" aria-pressed="${(view.shareSel||sh)===k}">${l}</button>`).join("")}</div>
    ${shareOptsHTML(x,names)}
@@ -743,9 +743,6 @@ function fbSheet(){const opt=(arr,name)=>`<select name="${name}" style="width:10
   <label>${t("fbRate")}</label><div class="row">${[1,2,3,4,5].map(n=>`<label class="chip" style="display:inline-flex;align-items:center;gap:6px;margin:0;border:1px solid var(--line)"><input type="radio" name="rating" value="${n}" style="width:auto"> ${n}</label>`).join("")}</div>
   <label for="fbH1">${t("fbHelped")}</label><textarea id="fbH1" name="helped" style="min-height:80px"></textarea>
   <label for="fbC1">${t("fbConf")}</label><textarea id="fbC1" name="confusing" style="min-height:80px"></textarea>
-  <label>${t("fbRefl")}</label>${opt(t("fbReflOpts"),"reflection")}
-  <label>${t("fbTheme")}</label>${opt(["Sunrise","Quiet teal","Lavender dusk","Garden"],"theme")}
-  <label>${t("fbScene")}</label>${opt(["Aurora","Slow tide","Rain on glass","Drifting lights"],"scene")}
   <label>${t("fbEx")}</label>${opt(Object.keys(EX).map(k=>EX[k].en.n),"exercise")}
   <label for="fbU1">${t("fbUnsafe")}</label><textarea id="fbU1" name="unsafe" style="min-height:70px"></textarea>
   <label for="fbM1">${t("fbMissing")}</label><textarea id="fbM1" name="missing" style="min-height:70px"></textarea>
