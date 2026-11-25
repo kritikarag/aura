@@ -153,13 +153,17 @@ label{font-weight:600;display:block;margin:14px 0 6px}
   <p class="card warn" style="margin:14px 0">If you're in danger right now, call 112. To talk to a trained counsellor in India, free and any time: Tele-MANAS, 14416 or 1-800-891-4416.</p>
   <button class="primary" id="welcomeOk" style="width:100%">I understand, let me in</button>
   </div></div>
+<form name="feedback" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input name="bot-field"><input name="rating"><input name="reflection"><input name="theme"><input name="scene"><input name="exercise">
+  <textarea name="helped"></textarea><textarea name="confusing"></textarea><textarea name="unsafe"></textarea><textarea name="missing"></textarea>
+  <input name="telegram"><input name="lang"><input name="entries">
+</form>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
 {
 /* ===== Set these two after deploying ===== */
 const REFLECT_URL="";   // your Cloudflare Worker URL, e.g. "https://aura-reflect.yourname.workers.dev"
-const FEEDBACK_URL="";  // your Google Form or Tally link
 /* ========================================== */
 const CARDS=[
 {id:"attach",topic:"attach",strong:true,match:/clingy|cling|pull away|push (them|people) away|abandon|left me|leave me|attach|छोड़ दे|छोड़ देगा|छोड़ देगी/i,
@@ -279,6 +283,15 @@ hello:"How are you, really?",breathe:"Breathe in as it grows, out as it fades",m
 moods:["Heavy","Low","Okay","Lighter","Good"],todayPrompt:"Something to sit with today",write:"Write",
 lookback:"Looking back",lookbackNone:"Your past entries will show up here, so you can see how far you've come.",
 proto:"Test version — your journal stays on this device.",feedback:"Give feedback on Aura",
+fbH:"Share feedback",fbIntro:"Everything is optional. Please don't include anything from your journal. Only your answers here are sent, and they go privately to the person building Aura.",
+fbRate:"Overall, how useful was Aura for you?",fbHelped:"What helped, even a little?",fbConf:"What confused you or felt clunky?",
+fbRefl:"Did the AI reflection feel fair?",fbReflOpts:["Too agreeable","About right","Too harsh","Didn't try it"],
+fbTheme:"Favourite theme",fbScene:"Favourite Just watch scene",fbEx:"Calm exercise that helped most",fbNone:"Not sure",
+fbUnsafe:"Did anything feel unsafe or not right?",fbMissing:"What's missing that you wish Aura had?",
+fbTg:"Telegram username (optional, only if you're happy to be contacted)",fbSend:"Send feedback",fbSending:"Sending…",
+fbThanks:"Thank you. Your feedback has been sent. It really helps.",fbErr:"Couldn't send right now. Check your connection and try again.",
+fbNudgeH:"How's Aura working for you?",fbNudgeP:"You've been using Aura for a bit. A couple of minutes of honest feedback would help a lot.",fbNotNow:"Not now",
+fbCardP:"Tell us what helped, what didn't, and what's missing. It takes about two minutes.",
 newEntry:"New entry",freeWrite:"Free write",pickPrompt:"Pick a prompt, or just write",placeholder:"Write whatever's on your mind…",
 howFeel:"How are you feeling?",save:"Save",cancel:"Cancel",voice:"Talk instead",stopTalk:"Stop",listening:"Listening… just talk. Pauses are okay.",calmH:"Calm down right now",calmP:"No typing, no AI. Just one thing to do.",breatheB:"Breathe",groundB:"5-4-3-2-1",watchB:"Just watch",
 inhale:"Breathe in",exhale:"Breathe out",done:"I'm done",
@@ -349,6 +362,15 @@ hello:"सच में, आप कैसे हैं?",breathe:"बढ़त�
 moods:["भारी","उदास","ठीक","हल्का","अच्छा"],todayPrompt:"आज सोचने के लिए कुछ",write:"लिखें",
 lookback:"पीछे मुड़कर देखें",lookbackNone:"आपकी पुरानी बातें यहाँ दिखेंगी, ताकि आप देख सकें कि आप कितना आगे आए हैं।",
 proto:"टेस्ट वर्ज़न — आपकी डायरी इसी डिवाइस पर रहती है।",feedback:"Aura पर अपनी राय दें",
+fbH:"अपनी राय दें",fbIntro:"सब कुछ वैकल्पिक है। कृपया अपनी डायरी से कुछ भी न लिखें। सिर्फ़ यहाँ के जवाब भेजे जाते हैं, और वे निजी रूप से Aura बनाने वाले तक पहुँचते हैं।",
+fbRate:"कुल मिलाकर, Aura आपके लिए कितना उपयोगी रहा?",fbHelped:"किस चीज़ से थोड़ी भी मदद मिली?",fbConf:"क्या उलझन भरा या अटपटा लगा?",
+fbRefl:"क्या AI का जवाब निष्पक्ष लगा?",fbReflOpts:["बहुत ज़्यादा हाँ में हाँ","ठीक था","बहुत कठोर","इस्तेमाल नहीं किया"],
+fbTheme:"पसंदीदा थीम",fbScene:"पसंदीदा 'बस देखिए' दृश्य",fbEx:"सबसे ज़्यादा मदद करने वाली एक्सरसाइज़",fbNone:"पता नहीं",
+fbUnsafe:"क्या कुछ असुरक्षित या ठीक नहीं लगा?",fbMissing:"Aura में क्या कमी है जो आप चाहेंगे?",
+fbTg:"Telegram यूज़रनेम (वैकल्पिक, सिर्फ़ अगर आप संपर्क के लिए तैयार हैं)",fbSend:"राय भेजें",fbSending:"भेजा जा रहा है…",
+fbThanks:"धन्यवाद। आपकी राय भेज दी गई। इससे सच में मदद मिलती है।",fbErr:"अभी नहीं भेज पाए। कनेक्शन जाँचकर फिर कोशिश करें।",
+fbNudgeH:"Aura आपके लिए कैसा चल रहा है?",fbNudgeP:"आप कुछ समय से Aura इस्तेमाल कर रहे हैं। दो मिनट की सच्ची राय बहुत मदद करेगी।",fbNotNow:"अभी नहीं",
+fbCardP:"बताइए क्या काम आया, क्या नहीं, और क्या कमी है। लगभग दो मिनट लगेंगे।",
 newEntry:"नई एंट्री",freeWrite:"खुलकर लिखें",pickPrompt:"कोई सवाल चुनें, या बस लिखें",placeholder:"जो भी मन में है, लिखिए…",
 howFeel:"आप कैसा महसूस कर रहे हैं?",save:"सहेजें",cancel:"रद्द करें",voice:"बोलकर बताएँ",stopTalk:"रोकें",listening:"सुन रहा है… बस बोलिए। रुकना भी ठीक है।",calmH:"अभी शांत होइए",calmP:"न लिखना, न AI। बस एक काम।",breatheB:"साँस",groundB:"5-4-3-2-1",watchB:"बस देखिए",
 inhale:"साँस अंदर लें",exhale:"साँस बाहर छोड़ें",done:"हो गया",
@@ -458,11 +480,13 @@ function docSummary(){const c=bodyStats(),S=t("bodySyms"),lines=c.map((n,i)=>n?`
   <label for="sumNotes">${t("sumNotes")}</label><textarea id="sumNotes" style="min-height:80px"></textarea>
   <div class="row" style="margin-top:12px"><button class="primary" data-act="sumCopy">${t("sumCopy")}</button><button data-act="closeSheet">${t("close")}</button></div>`)}
 function todayPromptText(){return PROMPTS[lang][new Date().getDate()%PROMPTS[lang].length]}
+function fbNudgeHTML(){if(store.get("fbDone",false)||store.get("fbNudgeOff",false)||entries().length<3)return "";
+  return `<div class="card" style="border-color:var(--teal)"><h3>${t("fbNudgeH")}</h3><p class="muted">${t("fbNudgeP")}</p><div class="row"><button class="primary" data-act="fb">${t("fbH")}</button><button class="ghost" data-act="fbOff">${t("fbNotNow")}</button></div></div>`}
 function todayHTML(){
   const e=entries(),mood=store.get("todayMood",null);
   const p=todayPromptText();
   const old=e.length>1?e[e.length-1]:null;
-  return `<h1>${t("hello")}</h1>
+  return `${fbNudgeHTML()}<h1>${t("hello")}</h1>
   <div class="glow" aria-hidden="true"><span>${t("breathe")}</span></div>
   <div class="card"><h3>${t("calmNow")}</h3>${calmToolsHTML()}<p style="margin:12px 0 0"><button data-act="pp">${store.get("pp",null)?t("ppOpen"):t("ppMake")}</button></p>${(()=>{const n=store.get("calmLog",[]).filter(c=>Date.now()-c.ts<7*864e5).length;return n?`<p class="note" style="margin-top:10px">${t("calmWeek").replace("{n}",n)}</p>`:""})()}</div>
   ${bodyCardHTML()}
@@ -470,7 +494,8 @@ function todayHTML(){
   <div class="card"><p class="muted">${t("todayPrompt")}</p><h2>${esc(p)}</h2>${composerHTML(comp.draft)}</div>
   ${(()=>{const c=CARDS[new Date().getDate()%CARDS.length];return `<button class="card entry" data-tab="learn"><small>${t("todayCard")} · ${esc(TOPICS[lang][c.topic])}</small><strong>${esc(c[lang].t)}</strong></button>`})()}
   <div class="card"><h3>${t("lookback")}</h3>${old?`<p class="muted">${fmt(old.ts)}</p><p>${esc(old.text.slice(0,180))}${old.text.length>180?"…":""}</p><button data-open="${old.id}">${t("journal")} →</button>`:`<p class="muted">${t("lookbackNone")}</p>`}</div>
-  <p class="note">${t("proto")}</p>${FEEDBACK_URL?`<p><a class="btn" href="${FEEDBACK_URL}" target="_blank" rel="noopener">${t("feedback")}</a></p>`:""}`;
+  <div class="card"><h3>${t("fbH")}</h3><p class="muted">${store.get("fbDone",false)?t("fbThanks"):t("fbCardP")}</p><button class="primary" data-act="fb">${t("fbH")}</button></div>
+  <p class="note">${t("proto")}</p>`;
 }
 function journalHTML(){
   const e=entries().slice().reverse();
@@ -713,6 +738,25 @@ function runSteps(B,steps,scene){let i=0;
     eyesCtl(B);if(scene)startScene(scene);if(voiceOn()&&!say(txt))tone(392,392,1.2);i++;calmTimer=setTimeout(go,sec*1000*(voiceOn()?1.3:1))};
   stepNext=go;go()}
 let stepNext=null;
+function fbSheet(){const opt=(arr,name)=>`<select name="${name}" style="width:100%;font:16px Mukta,sans-serif;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px"><option value="">${t("fbNone")}</option>${arr.map(x=>`<option>${esc(x)}</option>`).join("")}</select>`;
+  openSheet(`<h2>${t("fbH")}</h2><p class="muted">${t("fbIntro")}</p><form id="fbForm">
+  <label>${t("fbRate")}</label><div class="row">${[1,2,3,4,5].map(n=>`<label class="chip" style="display:inline-flex;align-items:center;gap:6px;margin:0;border:1px solid var(--line)"><input type="radio" name="rating" value="${n}" style="width:auto"> ${n}</label>`).join("")}</div>
+  <label for="fbH1">${t("fbHelped")}</label><textarea id="fbH1" name="helped" style="min-height:80px"></textarea>
+  <label for="fbC1">${t("fbConf")}</label><textarea id="fbC1" name="confusing" style="min-height:80px"></textarea>
+  <label>${t("fbRefl")}</label>${opt(t("fbReflOpts"),"reflection")}
+  <label>${t("fbTheme")}</label>${opt(["Sunrise","Quiet teal","Lavender dusk","Garden"],"theme")}
+  <label>${t("fbScene")}</label>${opt(["Aurora","Slow tide","Rain on glass","Drifting lights"],"scene")}
+  <label>${t("fbEx")}</label>${opt(Object.keys(EX).map(k=>EX[k].en.n),"exercise")}
+  <label for="fbU1">${t("fbUnsafe")}</label><textarea id="fbU1" name="unsafe" style="min-height:70px"></textarea>
+  <label for="fbM1">${t("fbMissing")}</label><textarea id="fbM1" name="missing" style="min-height:70px"></textarea>
+  <label for="fbT1">${t("fbTg")}</label><input id="fbT1" name="telegram" autocomplete="off">
+  <p id="fbMsg" class="muted" role="status"></p>
+  <div class="row"><button class="primary" type="submit" id="fbBtn">${t("fbSend")}</button><button type="button" data-act="closeSheet">${t("cancel")}</button></div></form>`);
+  $("fbForm").addEventListener("submit",async ev=>{ev.preventDefault();const btn=$("fbBtn");btn.disabled=true;btn.textContent=t("fbSending");
+    const fd=new FormData(ev.target);fd.append("form-name","feedback");fd.append("lang",lang);fd.append("entries",String(entries().length));
+    try{const r=await fetch("/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams(fd).toString()});
+      if(!r.ok)throw 0;store.set("fbDone",true);$("fbForm").innerHTML=`<p>${t("fbThanks")}</p><button class="primary" type="button" data-act="closeSheet">${t("close")}</button>`;render()}
+    catch(e){$("fbMsg").textContent=t("fbErr");btn.disabled=false;btn.textContent=t("fbSend")}});}
 function openSheet(html){$("sheetBody").innerHTML=html;$("sheet").classList.add("open")}
 function closeSheet(){$("sheet").classList.remove("open")}
 function crisisSheet(){openSheet(`<h2>${t("calmH")}</h2><p class="muted">${t("calmP")}</p>${store.get("pp",null)?`<p><button class="primary" data-act="pp">${t("ppOpen")}</button></p>`:""}${calmToolsHTML()}<h2 style="margin-top:24px">${t("crisisH")}</h2><p>${t("crisisP")}</p>
@@ -724,6 +768,7 @@ function settingsSheet(){const pin=store.get("pin",null);
   openSheet(`<h2>${t("setH")}</h2><label>${t("lang")}</label><div class="row"><button class="chip" data-setlang="en" aria-pressed="${lang==="en"}">English</button><button class="chip" data-setlang="hi" aria-pressed="${lang==="hi"}">हिंदी</button></div>
   <label for="newPin">${pin?t("pinOn"):t("pinSet")}</label>${pin?`<button data-act="pinOff">${t("pinOff")}</button>`:`<div class="row"><input id="newPin" inputmode="numeric" maxlength="4" type="password" style="max-width:140px"><button data-act="pinSave">${t("pinSave")}</button></div>`}
   <label class="eyes" style="margin-top:18px"><input type="checkbox" data-learnsug ${store.get("learnSuggest",true)?"checked":""}> ${t("suggestSet")}</label><p class="note">${t("suggestSetP")}</p>
+  <p style="margin-top:18px"><button data-act="fb">${t("feedback")}</button></p>
   <p style="margin-top:20px"><button data-act="clear" style="color:var(--coral)">${t("clear")}</button></p><p class="note">${t("aboutP")}</p>
   <button class="primary" data-act="closeSheet">${t("close")}</button>`)}
 
@@ -819,6 +864,8 @@ document.addEventListener("click",ev=>{
   if(a==="delete"){saveEntries(entries().filter(e=>e.id!==view.id));view=null;tab="journal";return render()}
   if(a==="saveStory"){saveStoryFields();return toast(t("saved"))}
   if(a==="closeSheet")return closeSheet();
+  if(a==="fb")return fbSheet();
+  if(a==="fbOff"){store.set("fbNudgeOff",true);return render()}
   if(a==="artOpen"){openArt=true;return render()}
   if(a==="artBack"){openArt=false;return render()}
   if(a==="artWrite"){view={type:"new",prompt:lang==="hi"?"जो बात अब भी भारी लगती है, उसके बारे में 15 मिनट लिखिए: क्या हुआ, कैसा लगा, और अब इसका आपके लिए क्या मतलब है।":"Write for 15 minutes about something that still weighs on you: what happened, how it felt, and what it means to you now.",mood:null};openArt=false;return render()}
